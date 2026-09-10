@@ -1,0 +1,43 @@
+(() => {
+  const S=window.TC,$=S.$;
+  const cleanNum=t=>(t.match(/[\d,]+/g)||[]).sort((a,b)=>b.replace(/\D/g,'').length-a.replace(/\D/g,'').length)[0]||'';
+  const cleanDate=t=>(t.match(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/)||[])[0]||'';
+  const cleanTrainer=t=>{const c=[];t.split(/[\n\r]+/).forEach(line=>{const x=line.replace(/[^A-Za-z0-9_-]/g,'');if(x.length>=3&&x.length<=20&&/[A-Za-z]/.test(x))c.push(x);c.push(...(line.match(/[A-Za-z][A-Za-z0-9_-]{2,19}/g)||[]))});return c.find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x))||c.find(x=>/[A-Z]/.test(x)&&/[a-z]/.test(x))||c[0]||''};
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const lev=(a,b)=>{a=norm(a);b=norm(b);const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const q=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=q}}return d[b.length]};
+  async function pokemonNames(){if(S.pokemonNames)return S.pokemonNames;try{const r=await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=2000'),j=await r.json();S.pokemonNames=j.results.map(x=>x.name)}catch{S.pokemonNames=[]}return S.pokemonNames}
+  async function cleanBuddy(t){const words=(t.match(/[A-Za-z][A-Za-z0-9-]{2,20}/g)||[]).map(x=>x.replace(/\d+$/,'')).filter(x=>x.length>=3&&!/^(me|friends|social|buddy|level)$/i.test(x)),names=await pokemonNames();if(!names.length)return words[0]||'';let best=['',99];for(const c of words)for(const p of names){const score=lev(c,p)/Math.max(c.length,p.length);if(score<best[1])best=[p,score]}return best[1]<=.42?best[0].replace(/(^|-)(\w)/g,(_,a,b)=>a+b.toUpperCase()):(words[0]||'')}
+  const best=arr=>[...arr].sort((a,b)=>b.confidence-a.confidence)[0]||{confidence:0};
+
+  async function scanIdentity(){
+    $('scanDetail').textContent='Trainer name';
+    const n1=S.crop(S.sourceImage,.055,.130,.36,.040,5),n2=S.crop(S.sourceImage,.055,.130,.36,.040,5,'maroon');
+    const nr=[await S.read(n1,'7'),await S.read(n2,'7','ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-')];
+    const name=cleanTrainer(nr.map(x=>x.text).join('\n')),nb=best(nr);if(name){$('trainerName').value=name;S.setState('trainerName',nb.confidence>=55?'ok':'review')}else S.setState('trainerName','review');
+    $('scanDetail').textContent='Buddy name';
+    const b1=S.crop(S.sourceImage,.125,.157,.24,.032,6),b2=S.crop(S.sourceImage,.125,.157,.24,.032,6,'maroon');
+    const br=[await S.read(b1,'7'),await S.read(b2,'7','ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-')];
+    const buddy=await cleanBuddy(br.map(x=>x.text).join('\n')),bb=best(br);if(buddy){$('buddy').value=buddy;S.setState('buddy',bb.confidence>=48?'ok':'review')}else S.setState('buddy','review');
+  }
+
+  async function scanStats(){const jobs=[
+    ['level','Level',[.045,.523,.15,.065],'red','0123456789'],
+    ['caught','Pokémon caught',[.575,.792,.35,.035],'green','0123456789,'],
+    ['stops','PokéStops visited',[.575,.832,.35,.035],'green','0123456789,'],
+    ['xp','Total XP',[.575,.870,.39,.037],'green','0123456789,'],
+    ['startDate','Start date',[.575,.909,.35,.038],'green','0123456789/-']];
+    for(const [id,label,r,mode,list] of jobs){$('scanDetail').textContent=label;const a=S.crop(S.sourceImage,...r,5),b=S.crop(S.sourceImage,...r,5,mode),reads=[await S.read(a,'7',list),await S.read(b,'7',list)],bt=best(reads);let v=id==='startDate'?cleanDate(reads.map(x=>x.text).join(' ')):cleanNum(reads.map(x=>x.text).join(' '));if(id==='level'){const m=v.match(/\d{1,3}/);v=m&&+m[0]<=100?m[0]:''}if(v){$(id).value=v;S.setState(id,bt.confidence>=55?'ok':'review')}else S.setState(id,'review')}
+  }
+
+  S.scanProfile=async()=>{if(!S.sourceImage||S.scanning)return;S.scanning=true;$('scanCard').classList.remove('hidden');$('scanPct').textContent='0%';try{S.setTeam(S.detectTeam(S.sourceImage),true);await scanIdentity();await scanStats();S.updateQuality();S.toast('Profile scan complete. Review anything marked Review.')}catch(e){console.error(e);S.toast('Some profile fields need manual review.')}finally{S.scanning=false;$('scanCard').classList.add('hidden');S.drawFront();S.drawBack()}};
+
+  S.makeCharacterCrop=img=>{const iw=img.naturalWidth,ih=img.naturalHeight,sx=iw*.29,sy=ih*.065,sw=iw*.705,sh=ih*.50,c=document.createElement('canvas');c.width=Math.round(sw);c.height=Math.round(sh);c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);S.crop=c;S.cutout=null;$('portraitEmpty').classList.add('hidden');$('retryExtractBtn').disabled=false;$('extractStatus').textContent='Preparing cutout';S.drawPortrait();S.drawFront();S.extractCutout()};
+  const resize=(src,max=1024)=>{const s=Math.min(1,max/Math.max(src.width,src.height));if(s===1)return src;const c=document.createElement('canvas');c.width=Math.round(src.width*s);c.height=Math.round(src.height*s);c.getContext('2d').drawImage(src,0,0,c.width,c.height);return c};
+  S.extractCutout=async()=>{if(!S.crop)return;$('extractStatus').textContent='Extracting…';try{if(!S.removeBg){const m=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');S.removeBg=m.removeBackground||m.default}if(typeof S.removeBg!=='function')throw new Error('No background remover');const p=resize(S.crop),blob=await new Promise(r=>p.toBlob(r,'image/png')),out=await S.removeBg(blob,{output:{format:'image/png',quality:1}}),url=URL.createObjectURL(out),im=new Image();await new Promise((r,j)=>{im.onload=r;im.onerror=j;im.src=url});S.cutout=im;$('extractStatus').textContent='Cutout ready';$('extractHelp').textContent='Transparent trainer + buddy layer created from your screenshot.';S.drawPortrait();S.drawFront()}catch(e){console.warn(e);S.cutout=null;$('extractStatus').textContent='Needs adjustment';$('extractHelp').textContent='Automatic cutout failed. Full trainer + buddy crop is preserved for manual framing.';S.drawPortrait();S.drawFront()}};
+
+  const canvasFrom=img=>{const m=1600,s=Math.min(1,m/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d',{willReadFrequently:true}).drawImage(img,0,0,c.width,c.height);return c};
+  const qrCrop=(c,b)=>{if(!b)return null;const p=Math.max(b.width,b.height)*.12,x=Math.max(0,b.x-p),y=Math.max(0,b.y-p),w=Math.min(c.width-x,b.width+2*p),h=Math.min(c.height-y,b.height+2*p),side=Math.min(c.width,c.height,Math.max(w,h)),cx=x+w/2,cy=y+h/2,sx=Math.max(0,Math.min(c.width-side,cx-side/2)),sy=Math.max(0,Math.min(c.height-side,cy-side/2)),o=document.createElement('canvas');o.width=o.height=512;o.getContext('2d').drawImage(c,sx,sy,side,side,0,0,512,512);return o};
+  const extractCode=t=>{let m=t.match(/\b\d{4}[\s-]+\d{4}[\s-]+\d{4}\b/);if(m)return m[0].replace(/\D/g,'');m=t.match(/(?:^|\D)(\d{12})(?:\D|$)/);if(m)return m[1];for(const line of t.split(/[\n\r]+/)){const d=line.replace(/\D/g,'');if(d.length===12)return d}return''};
+  async function detectQr(c){if('BarcodeDetector'in window)try{const d=new BarcodeDetector({formats:['qr_code']}),r=await d.detect(c);if(r.length)return{raw:r[0].rawValue||'',crop:qrCrop(c,r[0].boundingBox)}}catch(e){console.warn(e)}if(window.jsQR)try{const g=c.getContext('2d',{willReadFrequently:true}),im=g.getImageData(0,0,c.width,c.height),r=window.jsQR(im.data,c.width,c.height,{inversionAttempts:'attemptBoth'});if(r){const p=[r.location.topLeftCorner,r.location.topRightCorner,r.location.bottomLeftCorner,r.location.bottomRightCorner],x=Math.min(...p.map(q=>q.x)),X=Math.max(...p.map(q=>q.x)),y=Math.min(...p.map(q=>q.y)),Y=Math.max(...p.map(q=>q.y));return{raw:r.data||'',crop:qrCrop(c,{x,y,width:X-x,height:Y-y})}}}catch(e){console.warn(e)}return{raw:'',crop:null}}
+  S.scanCode=async()=>{if(!S.codeImage||S.codeScanning)return;S.codeScanning=true;$('codeScanStatus').textContent='Scanning…';$('codeScanStatus').className='chip accent';try{const c=canvasFrom(S.codeImage),q=await detectQr(c);S.qrRaw=q.raw;S.qrCrop=q.crop;let code=extractCode(S.qrRaw);if(!code){const r=await S.read(c,'6','0123456789 -');code=extractCode(r.text)}if(code){$('trainerCode').value=code;$('trainerCodeState').textContent='Detected';$('trainerCodeState').className='ok'}else{$('trainerCodeState').textContent='Review';$('trainerCodeState').className='review'}$('qrStatus').textContent=S.qrCrop?'QR detected':'QR needs review';$('qrStatus').className=S.qrCrop?'chip accent':'chip';$('codeScanStatus').textContent=code&&S.qrCrop?'Ready':'Review';S.drawBack();S.toast(code&&S.qrCrop?'Trainer code and QR captured.':'Code screen scanned — review missing items.')}catch(e){console.error(e);$('codeScanStatus').textContent='Review';S.toast('Trainer code screen could not be fully read.')}finally{S.codeScanning=false}};
+})();
