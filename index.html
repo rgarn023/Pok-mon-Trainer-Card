@@ -6,24 +6,24 @@
   <meta name="theme-color" content="#090c13" id="themeMeta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Trainer Card Studio</title>
+  <title>Trainer Card Studio v9</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <a class="brand" href="#"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>Profile → collectible card · v8</small></span></a>
+    <a class="brand" href="#"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>Profile → collectible card · v9</small></span></a>
     <button id="resetBtn" class="ghost">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> PRIVATE · ON-DEVICE</div>
+        <div class="eyebrow"><i></i> PRIVATE · ON-DEVICE · VERSION 9</div>
         <h1>Build a front-and-back trainer card from your screenshots.</h1>
-        <p>Upload your ME profile for your trainer, buddy and stats. Then upload your Trainer Code screen for the code and QR on the back.</p>
+        <p>Upload your ME profile for your trainer, buddy, and stats. Upload your Trainer Code screen for the code and QR on the back. The front only uses clean transparent trainer and buddy cutouts—never a screenshot rectangle.</p>
       </div>
-      <div class="steps"><span class="active">1 Profile</span><span>2 Code</span><span>3 Review</span><span>4 Export</span></div>
+      <div class="steps"><span class="active">1 Profile</span><span>2 Extract</span><span>3 Code</span><span>4 Export</span></div>
     </section>
 
     <div class="layout">
@@ -61,18 +61,34 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate" placeholder="7/9/2016"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" disabled type="button">Rescan profile</button><small>The scanner reads each Pokémon GO identity and Total Activity value from its own dedicated region.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" disabled type="button">Rescan profile</button><small>Trainer name, buddy name, and stats are scanned from separate Pokémon GO-specific regions.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy</h2><p>A wide source crop keeps both subjects in frame before transparent background removal.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
-          <div class="portraitPreview"><canvas id="portraitCanvas" width="720" height="720"></canvas><div id="portraitEmpty">Upload a profile screenshot</div></div>
-          <div class="controls">
-            <label>Zoom <output id="zoomOut">1.00×</output><input id="zoom" type="range" min="0.70" max="1.65" value="1" step="0.01"></label>
-            <label>Horizontal <output id="panXOut">0.00</output><input id="panX" type="range" min="-1" max="1" value="0" step="0.01"></label>
-            <label>Vertical <output id="panYOut">0.00</output><input id="panY" type="range" min="-1" max="1" value="0" step="0.01"></label>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy extraction</h2><p>Separate crops and separate cutouts are used. The card front draws only transparent cutouts.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="subjectGrid">
+            <div>
+              <div class="subjectHead"><b>Trainer cutout</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
+              <div class="portraitPreview small"><canvas id="trainerCanvas" width="540" height="620"></canvas><div id="trainerEmpty">Upload a profile screenshot</div></div>
+              <div class="controls single">
+                <label>Zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.70" value="1" step="0.01"></label>
+                <label>Horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
+              </div>
+              <div class="row compact"><button id="retryTrainerBtn" class="secondary" disabled type="button">Retry trainer cutout</button></div>
+            </div>
+            <div>
+              <div class="subjectHead"><b>Buddy cutout</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
+              <div class="portraitPreview small"><canvas id="buddyCanvas" width="540" height="620"></canvas><div id="buddyEmpty">Upload a profile screenshot</div></div>
+              <div class="controls single">
+                <label>Zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.70" value="1" step="0.01"></label>
+                <label>Horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
+              </div>
+              <div class="row compact"><button id="retryBuddyBtn" class="secondary" disabled type="button">Retry buddy cutout</button></div>
+            </div>
           </div>
-          <div class="row"><button id="retryExtractBtn" class="secondary" disabled type="button">Retry cutout</button><small id="extractHelp">The mobile-optimized cutout model preserves the actual trainer and buddy and removes small UI fragments.</small></div>
+          <div class="row"><small id="extractHelp">The card front will not render a screenshot rectangle. If cutout fails, review and retry extraction.</small></div>
         </section>
 
         <section class="panel">
@@ -105,7 +121,7 @@
           </div>
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds automatically. Upload your Trainer Code screen for the back.</small></div>
         </div>
-        <div class="previewActions"><p>✓ Profile screenshots, trainer code and QR stay in this browser session.</p><button id="saveBtn" class="primary" disabled type="button"><span>Save card <small>Front · high-resolution PNG</small></span><b>↓</b></button></div>
+        <div class="previewActions"><p>✓ Profile screenshots, trainer code, and QR stay in this browser session.</p><button id="saveBtn" class="primary" disabled type="button"><span>Save card <small>Front · high-resolution PNG</small></span><b>↓</b></button></div>
       </aside>
     </div>
   </main>
@@ -113,8 +129,8 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="core.js?v=8"></script>
-  <script src="scanner.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="core.js?v=9"></script>
+  <script src="scanner.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
