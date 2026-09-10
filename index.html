@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Trainer Card Studio</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <a class="brand" href="#"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>Profile → collectible card · v7</small></span></a>
+    <a class="brand" href="#"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>Profile → collectible card · v8</small></span></a>
     <button id="resetBtn" class="ghost">Start over</button>
   </header>
 
@@ -61,18 +61,18 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate" placeholder="7/9/2016"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" disabled type="button">Rescan profile</button><small>The scanner now reads the exact Pokémon GO identity and Total Activity regions separately.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" disabled type="button">Rescan profile</button><small>The scanner reads each Pokémon GO identity and Total Activity value from its own dedicated region.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy</h2><p>A wider crop keeps both subjects in frame before transparent background removal.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy</h2><p>A wide source crop keeps both subjects in frame before transparent background removal.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="portraitPreview"><canvas id="portraitCanvas" width="720" height="720"></canvas><div id="portraitEmpty">Upload a profile screenshot</div></div>
           <div class="controls">
             <label>Zoom <output id="zoomOut">1.00×</output><input id="zoom" type="range" min="0.70" max="1.65" value="1" step="0.01"></label>
             <label>Horizontal <output id="panXOut">0.00</output><input id="panX" type="range" min="-1" max="1" value="0" step="0.01"></label>
             <label>Vertical <output id="panYOut">0.00</output><input id="panY" type="range" min="-1" max="1" value="0" step="0.01"></label>
           </div>
-          <div class="row"><button id="retryExtractBtn" class="secondary" disabled type="button">Retry cutout</button><small id="extractHelp">On the hosted site, the browser-side model creates a transparent trainer + buddy layer.</small></div>
+          <div class="row"><button id="retryExtractBtn" class="secondary" disabled type="button">Retry cutout</button><small id="extractHelp">The mobile-optimized cutout model preserves the actual trainer and buddy and removes small UI fragments.</small></div>
         </section>
 
         <section class="panel">
@@ -113,8 +113,8 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="core.js?v=7"></script>
-  <script src="scanner.js?v=7"></script>
-  <script src="app.js?v=7"></script>
+  <script src="core.js?v=8"></script>
+  <script src="scanner.js?v=8"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
