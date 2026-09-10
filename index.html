@@ -4,21 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v13</title>
+  <title>Trainer Card Studio v14</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="v14.css?v=14">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v13 · OpenAI Vision + local cutouts</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v14 · enhanced Vision + unified team design</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI VISION PROFILE READER · VERSION 13</div>
-        <h1>Build a trainer card from your Pokémon GO screenshots.</h1>
-        <p>OpenAI Vision can now read the complete profile screenshot for the exact trainer name, buddy, level, team, activity totals, and start date. Your OpenAI API key stays securely in a Cloudflare Worker and is never placed in this public page.</p>
+        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 14</div>
+        <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
+        <p>The app reads the profile twice for better accuracy, uses enlarged text crops to verify exact values, detects the team, locates the trainer and buddy, and builds one consistent premium card design recolored for Valor, Mystic, or Instinct.</p>
       </div>
       <div class="steps"><span class="active">1 Upload</span><span>2 AI read</span><span>3 Review</span><span>4 Save</span></div>
     </section>
@@ -30,24 +31,24 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI Vision reads the whole screenshot when the secure AI connection is configured.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads the full screenshot and enlarged verification crops automatically.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
           <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Scanning profile</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
         </section>
 
-        <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>OpenAI Vision connection</h2><p>One-time setup. The API key stays in the Cloudflare Worker, not in this webpage.</p></div><span id="aiStatus" class="chip">Setup required</span></div>
+        <section class="panel ownerSetup">
+          <div class="panelhead"><div><span class="num">SETUP</span><h2>Owner AI connection</h2><p>Hidden during normal use. Open the page with <b>?setup=1</b> only when you need to change the Worker connection.</p></div><span id="aiStatus" class="chip">OpenAI ready</span></div>
           <div class="formgrid">
-            <label class="field wide"><span>Cloudflare Worker URL <em>HTTPS</em></span><input id="aiEndpoint" autocomplete="off" inputmode="url" placeholder="https://pokemon-trainer-card-openai....workers.dev"></label>
-            <label class="field wide"><span>AI access code <em>Private</em></span><input id="aiAccessCode" type="password" autocomplete="off" placeholder="Your Worker access code"></label>
+            <label class="field wide"><span>Cloudflare Worker URL</span><input id="aiEndpoint" autocomplete="off" inputmode="url"></label>
+            <label class="field wide"><span>Legacy access code <em>Optional</em></span><input id="aiAccessCode" type="password" autocomplete="off" placeholder="Only needed while the old Worker is live"></label>
           </div>
-          <div class="row"><button id="saveAIConfigBtn" class="secondary" type="button">Save AI connection</button><small>The included Worker tracks estimated GPT-5.6 Luna spend and defaults to stopping at about $0.90 per month. If AI is not configured or fails, local OCR remains available as a fallback.</small></div>
+          <div class="row"><button id="saveAIConfigBtn" class="secondary" type="button">Save AI connection</button></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Team</h2><p>Detected by OpenAI Vision when available. You can override it manually.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected from the uploaded screenshot. You can override it manually if needed.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
           <div class="teams">
             <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Red</small></span></button>
             <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Blue</small></span></button>
@@ -56,7 +57,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Profile details</h2><p>OpenAI fills these from the screenshot. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>OpenAI verifies the text with enlarged crops. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -67,11 +68,11 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>When the OpenAI connection is ready, Rescan uses OpenAI Vision first.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan runs the enhanced two-pass OpenAI read again.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer and buddy cutouts</h2><p>Image cutouts remain local and separate from OpenAI profile reading.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>OpenAI first locates each subject. The browser then removes the background while preserving the actual visible screenshot pixels.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -81,7 +82,7 @@
                 <label>Horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry trainer cutout</button></div>
+              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry trainer</button></div>
             </div>
             <div>
               <div class="subjectHead"><b>Buddy</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
@@ -91,14 +92,14 @@
                 <label>Horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry buddy cutout</button></div>
+              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry buddy</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The final card never uses the raw screenshot rectangle as a cutout fallback.</small></div>
+          <div class="row"><small id="extractHelp">The final card never uses a pasted screenshot rectangle.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">06</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
@@ -108,10 +109,10 @@
           <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="code"><div><b id="codeSourceName"></b><small id="codeSourceMeta"></small></div><button id="replaceCodeBtn" class="linkbtn" type="button">Replace</button></div>
           <div class="codeReview">
             <label class="field"><span>Trainer code <em id="trainerCodeState">Manual</em></span><input id="trainerCode" inputmode="numeric"></label>
-            <div class="qrReview"><div><b>QR code</b><small>Local QR detection only.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
+            <div class="qrReview"><div><b>QR code</b><small>Detected locally from the uploaded screen.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
           </div>
           <div id="codeEmpty" class="codeHint">The card back can be added later if you want to upload the Trainer Code screen afterward.</div>
-          <div class="row"><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code screen</button><small>Uses BarcodeDetector and jsQR locally.</small></div>
+          <div class="row"><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code screen</button></div>
         </section>
       </div>
 
@@ -121,13 +122,13 @@
         <div class="canvasWrap">
           <div id="cardStage" class="cardStage" role="button" tabindex="0" aria-label="Flip card">
             <div id="cardFlipper" class="cardFlipper">
-              <div class="cardFace cardFront"><canvas id="cardCanvas" width="916" height="2290"></canvas></div>
-              <div class="cardFace cardBack"><canvas id="backCanvas" width="916" height="2290"></canvas></div>
+              <div class="cardFace cardFront"><canvas id="cardCanvas" width="1200" height="1600"></canvas></div>
+              <div class="cardFace cardBack"><canvas id="backCanvas" width="1200" height="1600"></canvas></div>
             </div>
           </div>
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
-        <div class="previewActions"><p>OpenAI profile reading uses the secure Worker when configured. Cutouts and QR processing remain in the browser.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
+        <div class="previewActions"><p>One master card composition is used for all three teams; only the team palette and emblem change.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
       </aside>
     </div>
   </main>
@@ -137,10 +138,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=13"></script>
-  <script src="ai.js?v=13"></script>
-  <script src="scanner.js?v=13"></script>
-  <script src="openai-client.js?v=13"></script>
-  <script src="app.js?v=13"></script>
+  <script src="core.js?v=14"></script>
+  <script src="renderer-v14.js?v=14"></script>
+  <script src="ai.js?v=14"></script>
+  <script src="scanner.js?v=14"></script>
+  <script src="openai-client.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
