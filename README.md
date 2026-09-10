@@ -1,37 +1,25 @@
-# Pokémon Trainer Card Studio
+# Trainer Card Studio
 
-Mobile-first web app for creating a collectible trainer card from a player profile screenshot.
+Mobile-first trainer card creator for Pokémon GO profile screenshots.
 
-## Current features
+## v7
 
-- Valor, Mystic, and Instinct card themes
-- Automatic team detection with manual override
-- Profile OCR for trainer details and activity statistics
-- Trainer + buddy portrait capture and optional browser-side background removal
-- Manual review/editing of every detected field
-- Position/zoom controls for the imported trainer and buddy
-- High-resolution PNG export
-- Installable PWA shell when hosted over HTTPS
-- Screenshot processing remains in the browser session
-
-## Run locally
-
-The app uses browser modules and OCR resources that behave best over HTTP/HTTPS rather than opening `index.html` through Android `content://`.
-
-```bash
-python -m http.server 8080
-```
-
-Then open `http://localhost:8080`.
+- Upload a full **ME / Trainer Profile** screenshot.
+- Automatically detect Valor, Mystic, or Instinct and theme the app/card.
+- Profile-layout-specific OCR for trainer name, buddy, level, Pokémon caught, PokéStops visited, Total XP, and start date.
+- Wider trainer + buddy capture and corrected browser background-removal loading.
+- Manual zoom and positioning for the trainer/buddy layer.
+- Upload a **Trainer Code** screenshot to detect the 12-digit trainer code and QR code.
+- Click/tap the card to flip between a front profile card and a back QR/trainer-code card.
+- Export the currently visible side as a high-resolution PNG.
+- Data stays in the browser session.
 
 ## GitHub Pages
 
-This repository is structured to publish directly from the root of the `main` branch. In GitHub: **Settings → Pages → Deploy from a branch → main / (root)**.
+This repository is designed to be served directly from the `main` branch root with GitHub Pages.
 
-Once Pages is enabled, the public site will be available at:
-
-`https://rgarn023.github.io/Pok-mon-Trainer-Card/`
+The v7 service worker uses a new cache version and network-first loading so deployments do not remain stuck on an older cached app version.
 
 ## Notes
 
-OCR and foreground-removal models are loaded from public CDNs on first use, so those enhanced features require an internet connection. The profile screenshot itself is not uploaded by this app.
+OCR and automated image extraction are best-effort and every detected field remains editable. QR detection uses the browser's BarcodeDetector when available, with jsQR fallback. The trainer/buddy transparent cutout uses `@imgly/background-removal` when the browser can load and run the model.
