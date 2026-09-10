@@ -4,33 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v12</title>
+  <title>Trainer Card Studio v13</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v12 · local vision · no-cost</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v13 · OpenAI Vision + local cutouts</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> LOCAL ONLY · NO API COST · VERSION 12</div>
-        <h1>Build a premium trainer card from screenshots on-device.</h1>
-        <p>This version keeps processing in the browser. It uses validated local OCR regions for profile text, a lightweight person model for the trainer, and local foreground removal for the buddy layer. No paid API is used.</p>
+        <div class="eyebrow"><i></i> OPENAI VISION PROFILE READER · VERSION 13</div>
+        <h1>Build a trainer card from your Pokémon GO screenshots.</h1>
+        <p>OpenAI Vision can now read the complete profile screenshot for the exact trainer name, buddy, level, team, activity totals, and start date. Your OpenAI API key stays securely in a Cloudflare Worker and is never placed in this public page.</p>
       </div>
-      <div class="steps"><span class="active">1 Upload</span><span>2 Review</span><span>3 Flip</span><span>4 Save</span></div>
+      <div class="steps"><span class="active">1 Upload</span><span>2 AI read</span><span>3 Review</span><span>4 Save</span></div>
     </section>
 
     <div class="layout">
       <div class="leftcol">
         <section class="panel">
-          <div class="panelhead"><div><span class="num">01</span><h2>Profile screenshot</h2><p>Upload the full Pokémon GO ME profile page with Total Activity visible.</p></div><span class="chip">On-device</span></div>
+          <div class="panelhead"><div><span class="num">01</span><h2>Profile screenshot</h2><p>Upload the full Pokémon GO ME profile page with Total Activity visible.</p></div><span class="chip">Profile source</span></div>
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>Trainer name, buddy, team, stats, and subject cutouts come from this file.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI Vision reads the whole screenshot when the secure AI connection is configured.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
@@ -38,7 +38,16 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected automatically. You can override it manually.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>OpenAI Vision connection</h2><p>One-time setup. The API key stays in the Cloudflare Worker, not in this webpage.</p></div><span id="aiStatus" class="chip">Setup required</span></div>
+          <div class="formgrid">
+            <label class="field wide"><span>Cloudflare Worker URL <em>HTTPS</em></span><input id="aiEndpoint" autocomplete="off" inputmode="url" placeholder="https://pokemon-trainer-card-openai....workers.dev"></label>
+            <label class="field wide"><span>AI access code <em>Private</em></span><input id="aiAccessCode" type="password" autocomplete="off" placeholder="Your Worker access code"></label>
+          </div>
+          <div class="row"><button id="saveAIConfigBtn" class="secondary" type="button">Save AI connection</button><small>The included Worker tracks estimated GPT-5.6 Luna spend and defaults to stopping at about $0.90 per month. If AI is not configured or fails, local OCR remains available as a fallback.</small></div>
+        </section>
+
+        <section class="panel">
+          <div class="panelhead"><div><span class="num">03</span><h2>Team</h2><p>Detected by OpenAI Vision when available. You can override it manually.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
           <div class="teams">
             <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Red</small></span></button>
             <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Blue</small></span></button>
@@ -47,7 +56,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Review fields before export.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Profile details</h2><p>OpenAI fills these from the screenshot. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -58,11 +67,11 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Local OCR uses field-specific crops and validation.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>When the OpenAI connection is ready, Rescan uses OpenAI Vision first.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy cutouts</h2><p>Each subject is extracted separately. The final front card never uses a screenshot rectangle.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer and buddy cutouts</h2><p>Image cutouts remain local and separate from OpenAI profile reading.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -85,11 +94,11 @@
               <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry buddy cutout</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">If cutout fails, the front card will show a missing-subject notice instead of a raw screenshot crop.</small></div>
+          <div class="row"><small id="extractHelp">The final card never uses the raw screenshot rectangle as a cutout fallback.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">06</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
@@ -118,7 +127,7 @@
           </div>
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
-        <div class="previewActions"><p>✓ Screenshots are processed locally in your browser session.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
+        <div class="previewActions"><p>OpenAI profile reading uses the secure Worker when configured. Cutouts and QR processing remain in the browser.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
       </aside>
     </div>
   </main>
@@ -128,9 +137,10 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=12"></script>
-  <script src="ai.js?v=12"></script>
-  <script src="scanner.js?v=12"></script>
-  <script src="app.js?v=12"></script>
+  <script src="core.js?v=13"></script>
+  <script src="ai.js?v=13"></script>
+  <script src="scanner.js?v=13"></script>
+  <script src="openai-client.js?v=13"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>
