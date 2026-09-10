@@ -1,0 +1,3 @@
+.cardStage{aspect-ratio:3/4;width:min(100%,390px)}
+.ownerSetup{display:none}.show-owner-setup .ownerSetup{display:block}
+@media(max-width:900px){.cardStage{width:min(92vw,390px)}}
