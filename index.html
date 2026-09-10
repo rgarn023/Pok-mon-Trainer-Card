@@ -3,45 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#090c13" id="themeMeta">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Trainer Card Studio v9</title>
+  <meta name="theme-color" content="#090c13">
+  <title>Trainer Card Studio v10</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <a class="brand" href="#"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>Profile → collectible card · v9</small></span></a>
-    <button id="resetBtn" class="ghost">Start over</button>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v10 · local AI · no-cost</small></span></div>
+    <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
-
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> PRIVATE · ON-DEVICE · VERSION 9</div>
-        <h1>Build a front-and-back trainer card from your screenshots.</h1>
-        <p>Upload your ME profile for your trainer, buddy, and stats. Upload your Trainer Code screen for the code and QR on the back. The front only uses clean transparent trainer and buddy cutouts—never a screenshot rectangle.</p>
+        <div class="eyebrow"><i></i> LOCAL ONLY · NO API COST · VERSION 10</div>
+        <h1>Build a premium trainer card from screenshots on-device.</h1>
+        <p>This version keeps processing in the browser. It scans your profile screenshot, extracts trainer and buddy separately, supports a Trainer Code screenshot for the back, and flips front/back by tapping the card.</p>
       </div>
-      <div class="steps"><span class="active">1 Profile</span><span>2 Extract</span><span>3 Code</span><span>4 Export</span></div>
+      <div class="steps"><span class="active">1 Upload</span><span>2 Review</span><span>3 Flip</span><span>4 Save</span></div>
     </section>
 
     <div class="layout">
       <div class="leftcol">
         <section class="panel">
-          <div class="panelhead"><div><span class="num">01</span><h2>Player screenshot</h2><p>Use the full ME profile screen with Total Activity visible.</p></div><span class="chip">Local only</span></div>
-          <label class="dropzone" id="dropzone">
+          <div class="panelhead"><div><span class="num">01</span><h2>Profile screenshot</h2><p>Upload the full Pokémon GO ME profile page with Total Activity visible.</p></div><span class="chip">On-device</span></div>
+          <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose player screenshot</b><small>PNG, JPG or WebP · full ME profile works best</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>Trainer name, buddy, team, stats, and subject cutouts come from this file.</small></span>
             <span class="browse">Browse</span>
           </label>
-          <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="Uploaded profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
-          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading profile…</b><small id="scanDetail">Preparing OCR</small></div><b id="scanPct">0%</b></div>
+          <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
+          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Scanning profile</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected automatically after upload. Override it anytime.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected automatically. You can override it manually.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
           <div class="teams">
             <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Red</small></span></button>
             <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Blue</small></span></button>
@@ -50,62 +47,62 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Anything marked Review can be corrected before export.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Review fields before export.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
-            <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName" autocomplete="off" placeholder="Trainer name"></label>
-            <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric" placeholder="80"></label>
-            <label class="field"><span>Buddy <em id="buddyState">Manual</em></span><input id="buddy" autocomplete="off" placeholder="Buddy name"></label>
-            <label class="field"><span>Pokémon caught <em id="caughtState">Manual</em></span><input id="caught" inputmode="numeric" placeholder="100,949"></label>
-            <label class="field"><span>PokéStops visited <em id="stopsState">Manual</em></span><input id="stops" inputmode="numeric" placeholder="62,962"></label>
-            <label class="field"><span>Total XP <em id="xpState">Manual</em></span><input id="xp" inputmode="numeric" placeholder="295,197,796"></label>
-            <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate" placeholder="7/9/2016"></label>
+            <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
+            <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
+            <label class="field"><span>Buddy <em id="buddyState">Manual</em></span><input id="buddy"></label>
+            <label class="field"><span>Pokémon caught <em id="caughtState">Manual</em></span><input id="caught" inputmode="numeric"></label>
+            <label class="field"><span>PokéStops visited <em id="stopsState">Manual</em></span><input id="stops" inputmode="numeric"></label>
+            <label class="field"><span>Total XP <em id="xpState">Manual</em></span><input id="xp" inputmode="numeric"></label>
+            <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" disabled type="button">Rescan profile</button><small>Trainer name, buddy name, and stats are scanned from separate Pokémon GO-specific regions.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Local OCR uses field-specific crops and validation.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy extraction</h2><p>Separate crops and separate cutouts are used. The card front draws only transparent cutouts.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy cutouts</h2><p>Each subject is extracted separately. The final front card never uses a screenshot rectangle.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
-              <div class="subjectHead"><b>Trainer cutout</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Trainer</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="trainerCanvas" width="540" height="620"></canvas><div id="trainerEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
-                <label>Zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.70" value="1" step="0.01"></label>
+                <label>Zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
                 <label>Horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryTrainerBtn" class="secondary" disabled type="button">Retry trainer cutout</button></div>
+              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry trainer cutout</button></div>
             </div>
             <div>
-              <div class="subjectHead"><b>Buddy cutout</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Buddy</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="buddyCanvas" width="540" height="620"></canvas><div id="buddyEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
-                <label>Zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.70" value="1" step="0.01"></label>
+                <label>Zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
                 <label>Horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryBuddyBtn" class="secondary" disabled type="button">Retry buddy cutout</button></div>
+              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry buddy cutout</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The card front will not render a screenshot rectangle. If cutout fails, review and retry extraction.</small></div>
+          <div class="row"><small id="extractHelp">If cutout fails, the front card will show a missing-subject notice instead of a raw screenshot crop.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer code + QR</h2><p>Upload a screenshot of your Trainer Code screen. We’ll read the 12-digit code and capture the QR for the card back.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
-          <label class="dropzone codeDropzone">
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
-            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>Include both your trainer code and QR code</small></span>
+            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>Include the 12-digit trainer code and QR code.</small></span>
             <span class="browse">Browse</span>
           </label>
-          <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="Uploaded trainer code screen"><div><b id="codeSourceName"></b><small id="codeSourceMeta"></small></div><button id="replaceCodeBtn" class="linkbtn" type="button">Replace</button></div>
+          <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="code"><div><b id="codeSourceName"></b><small id="codeSourceMeta"></small></div><button id="replaceCodeBtn" class="linkbtn" type="button">Replace</button></div>
           <div class="codeReview">
-            <label class="field"><span>Trainer code <em id="trainerCodeState">Manual</em></span><input id="trainerCode" inputmode="numeric" placeholder="1234 5678 9012" maxlength="18"></label>
-            <div class="qrReview"><div><b>QR code</b><small>Detected directly from the uploaded screenshot when possible.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
+            <label class="field"><span>Trainer code <em id="trainerCodeState">Manual</em></span><input id="trainerCode" inputmode="numeric"></label>
+            <div class="qrReview"><div><b>QR code</b><small>Local QR detection only.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
           </div>
-          <div id="codeEmpty" class="codeHint">The back of your card will stay ready for a Trainer Code screenshot whenever you want to add it.</div>
-          <div class="row"><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code screen</button><small>Chrome uses its QR detector first, then a local QR fallback and OCR.</small></div>
+          <div id="codeEmpty" class="codeHint">The card back can be added later if you want to upload the Trainer Code screen afterward.</div>
+          <div class="row"><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code screen</button><small>Uses BarcodeDetector and jsQR locally.</small></div>
         </section>
       </div>
 
@@ -113,15 +110,15 @@
         <div class="previewHead"><div><small>LIVE PREVIEW</small><h2>Your card</h2></div><div class="previewMeta"><span id="sidePill" class="chip">Front</span><span id="previewTeam" class="chip accent">Choose a team</span></div></div>
         <button id="flipBtn" class="flipHint" type="button">↻ Tap the card or this button to flip</button>
         <div class="canvasWrap">
-          <div id="cardStage" class="cardStage" role="button" tabindex="0" aria-label="Flip trainer card front and back">
+          <div id="cardStage" class="cardStage" role="button" tabindex="0" aria-label="Flip card">
             <div id="cardFlipper" class="cardFlipper">
               <div class="cardFace cardFront"><canvas id="cardCanvas" width="916" height="2290"></canvas></div>
               <div class="cardFace cardBack"><canvas id="backCanvas" width="916" height="2290"></canvas></div>
             </div>
           </div>
-          <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds automatically. Upload your Trainer Code screen for the back.</small></div>
+          <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
-        <div class="previewActions"><p>✓ Profile screenshots, trainer code, and QR stay in this browser session.</p><button id="saveBtn" class="primary" disabled type="button"><span>Save card <small>Front · high-resolution PNG</small></span><b>↓</b></button></div>
+        <div class="previewActions"><p>✓ Screenshots are processed locally in your browser session.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
       </aside>
     </div>
   </main>
@@ -129,8 +126,8 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="core.js?v=9"></script>
-  <script src="scanner.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="core.js?v=10"></script>
+  <script src="scanner.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
