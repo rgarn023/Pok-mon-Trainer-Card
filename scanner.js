@@ -1,46 +1,84 @@
 (() => {
   const S=window.TC,$=S.$;
-  const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const cleanDate=t=>(t.match(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/)||[])[0]||'';
-  const cap=s=>s? s.replace(/(^|-)(\w)/g,(_,a,b)=>a+b.toUpperCase()) : '';
-  async function pokemonNames(){ if(S.pokemonNames) return S.pokemonNames; try{ const r=await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=2000'); const j=await r.json(); S.pokemonNames=j.results.map(x=>x.name);}catch{S.pokemonNames=[]} return S.pokemonNames; }
-  const levenshtein=(a,b)=>{a=norm(a);b=norm(b);const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const q=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=q}}return d[b.length]};
-  async function bestPokemon(text,trainer){ const names=await pokemonNames(); const words=[...new Set((text.match(/[A-Za-z][A-Za-z-]{2,20}/g)||[]).map(x=>x.replace(/^mega/i,'').trim()).filter(x=>norm(x)!==norm(trainer)&&!['buddy','history','scrapbook','journal','style','friends','social','me'].includes(norm(x))))]; let best=['',99]; for(const w of words){ for(const p of names){ const score=levenshtein(w,p)/Math.max(w.length,p.length); if(score<best[1]) best=[p,score]; }} return best[1] <= .42 ? cap(best[0]) : (words[0]||''); }
-  const textCandidates=t => [...new Set((t.split(/[\n\r]+/).flatMap(line => [line.replace(/[^A-Za-z0-9_-]/g,''), ...(line.match(/[A-Za-z][A-Za-z0-9_-]{2,24}/g)||[])]).filter(Boolean)))];
-  function cleanTrainer(text){ const blocked=['me','friends','social','level','buddy','history','scrapbook','journal','style','total','activity']; const c=textCandidates(text).filter(x=>!blocked.includes(norm(x))&&!/^\d+$/.test(x)); return c.find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x)) || c.find(x=>/[A-Z]/.test(x)&&/[a-z]/.test(x)) || c[0] || ''; }
-  function chooseNumber(reads,{minDigits=1,maxDigits=12,maxValue=Number.MAX_SAFE_INTEGER}={}){ const vals=[]; reads.forEach(r=>{ (r.text.match(/[\d][\d,\.\s]*/g)||[]).forEach(s=>{ const d=s.replace(/\D/g,''); if(d.length>=minDigits&&d.length<=maxDigits&&Number(d)<=maxValue) vals.push({digits:d,confidence:r.confidence||0}); }); }); return vals.sort((a,b)=>b.confidence-a.confidence||b.digits.length-a.digits.length)[0]||null; }
-  const formatDigits=d=>d.replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  async function multiRead(crops, whitelist){ const results=[]; for(const c of crops){ results.push(await S.read(c,'7',whitelist)); results.push(await S.read(c,'6',whitelist)); results.push(await S.read(c,'13',whitelist)); } return results; }
-  async function scanIdentity(){
-    $('scanDetail').textContent='Trainer name';
-    const nCrops=[S.crop(S.sourceImage,.045,.128,.39,.032,6),S.crop(S.sourceImage,.045,.126,.39,.036,6),S.crop(S.sourceImage,.045,.128,.39,.032,6,'maroon'),S.crop(S.sourceImage,.045,.126,.39,.036,6,'maroon')];
-    const nr=await multiRead(nCrops,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-');
-    const trainer=cleanTrainer(nr.map(r=>r.text).join('\n')); if(trainer){ $('trainerName').value=trainer; S.setState('trainerName', (nr.sort((a,b)=>b.confidence-a.confidence)[0]?.confidence||0)>=52?'ok':'review'); } else S.setState('trainerName','review');
-    $('scanDetail').textContent='Buddy name';
-    const bCrops=[S.crop(S.sourceImage,.046,.154,.40,.030,7),S.crop(S.sourceImage,.046,.151,.40,.033,7),S.crop(S.sourceImage,.046,.154,.40,.030,7,'maroon'),S.crop(S.sourceImage,.046,.151,.40,.033,7,'maroon')];
-    const br=await multiRead(bCrops,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-');
-    const buddy=await bestPokemon(br.map(r=>r.text).join('\n'), $('trainerName').value); if(buddy){ $('buddy').value=buddy; S.setState('buddy', (br.sort((a,b)=>b.confidence-a.confidence)[0]?.confidence||0)>=42?'ok':'review'); } else S.setState('buddy','review');
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const cap=s=>s?s.replace(/(^|-)(\w)/g,(_,a,b)=>a+b.toUpperCase()):'';
+  const textCandidates=t=>[...new Set((t||'').split(/[\n\r]+/).flatMap(line=>[line.replace(/[^A-Za-z0-9_-]/g,''),...(line.match(/[A-Za-z][A-Za-z0-9_-]{2,24}/g)||[])]).filter(Boolean))];
+  const cleanTrainer=t=>{const blocked=new Set(['me','friends','social','level','buddy','history','scrapbook','journal','style','total','activity']);const c=textCandidates(t).filter(x=>!blocked.has(norm(x))&&!/^\d+$/.test(x));return c.find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x))||c.find(x=>/[A-Z]/.test(x)&&/[a-z]/.test(x))||c[0]||''};
+  const lev=(a,b)=>{a=norm(a);b=norm(b);const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const q=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=q}}return d[b.length]};
+  async function names(){if(S.pokemonNames)return S.pokemonNames;try{const r=await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=2000');const j=await r.json();S.pokemonNames=j.results.map(x=>x.name)}catch{S.pokemonNames=[]}return S.pokemonNames}
+  async function cleanBuddy(t,trainer){const blocked=new Set(['buddy','history','scrapbook','journal','style','friends','social','me','mega','cp']);const words=textCandidates(t).map(x=>x.replace(/^mega/i,'').replace(/^\d+|\d+$/g,'')).filter(x=>x.length>=3&&!blocked.has(norm(x))&&norm(x)!==norm(trainer));const n=await names();if(!n.length)return words[0]||'';let best=['',99];for(const w of words)for(const p of n){const s=lev(w,p)/Math.max(w.length,p.length);if(s<best[1])best=[p,s]}return best[1]<=.45?cap(best[0]):(words[0]||'')}
+  const num=t=>{const m=(t||'').match(/[\d][\d,\.\s]*/g)||[];return m.map(s=>s.replace(/\D/g,'')).filter(Boolean).sort((a,b)=>b.length-a.length)[0]||''};
+  const fmt=d=>d.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const bestConfidence=arr=>Math.round(Math.max(0,...arr.map(r=>Number(r.confidence)||0)));
+
+  function fieldCrops(){
+    const I=S.sourceImage;
+    return {
+      trainerName:[S.crop(I,.045,.126,.40,.038,4),S.crop(I,.045,.129,.40,.032,5,'maroon')],
+      buddy:[S.crop(I,.045,.151,.40,.036,5),S.crop(I,.045,.154,.40,.030,6,'maroon')],
+      level:[S.crop(I,.045,.518,.19,.062,4),S.crop(I,.045,.518,.19,.062,5,'red')],
+      caught:[S.crop(I,.565,.786,.36,.047,4),S.crop(I,.565,.786,.36,.047,5,'green')],
+      stops:[S.crop(I,.565,.825,.36,.047,4),S.crop(I,.565,.825,.36,.047,5,'green')],
+      xp:[S.crop(I,.555,.863,.40,.047,4),S.crop(I,.555,.863,.40,.047,5,'green')],
+      startDate:[S.crop(I,.565,.902,.34,.047,4),S.crop(I,.565,.902,.34,.047,5,'green')]
+    };
   }
-  async function scanStats(){
-    const jobs=[
-      ['level','Level',[[.050,.520,.17,.055],[.050,.520,.19,.060]],'red','0123456789',{minDigits:1,maxDigits:3,maxValue:100}],
-      ['caught','Pokémon caught',[[.580,.790,.32,.040],[.570,.788,.34,.044]],'green','0123456789,',{minDigits:2,maxDigits:9}],
-      ['stops','PokéStops visited',[[.580,.828,.32,.040],[.570,.826,.34,.044]],'green','0123456789,',{minDigits:2,maxDigits:9}],
-      ['xp','Total XP',[[.580,.866,.36,.042],[.565,.864,.38,.045]],'green','0123456789,',{minDigits:4,maxDigits:12}],
-      ['startDate','Start date',[[.580,.905,.30,.040],[.565,.903,.33,.044]],'green','0123456789/-',null]
-    ];
-    for(const [id,label,rects,mode,list,rules] of jobs){ $('scanDetail').textContent=label; const crops=[]; rects.forEach(r=>{ crops.push(S.crop(S.sourceImage,...r,6)); crops.push(S.crop(S.sourceImage,...r,6,mode)); }); const reads=await multiRead(crops,list); if(id==='startDate'){ const val=cleanDate(reads.map(r=>r.text).join(' ')); if(val){ $(id).value=val; S.setState(id,(reads.sort((a,b)=>b.confidence-a.confidence)[0]?.confidence||0)>=45?'ok':'review'); } else S.setState(id,'review'); } else { const pick=chooseNumber(reads,rules); if(pick){ $(id).value=id==='level'?pick.digits:formatDigits(pick.digits); S.setState(id,pick.confidence>=45?'ok':'review'); } else S.setState(id,'review'); } }
+
+  async function paddleScan(){
+    $('scanDetail').textContent='Loading local AI OCR…';
+    const crops=fieldCrops();
+    const keys=['trainerName','buddy','level','caught','stops','xp','startDate'];
+    const flat=keys.flatMap(k=>crops[k]);
+    const results=await S.paddleReadMany(flat);
+    const grouped={};let j=0;for(const k of keys){grouped[k]=[results[j++],results[j++]];}
+
+    const trainer=cleanTrainer(grouped.trainerName.map(r=>r.text).join('\n'));
+    if(trainer){$('trainerName').value=trainer;S.setState('trainerName',bestConfidence(grouped.trainerName)>=55?'ok':'review')}else S.setState('trainerName','review');
+
+    const buddy=await cleanBuddy(grouped.buddy.map(r=>r.text).join('\n'),trainer);
+    if(buddy){$('buddy').value=buddy;S.setState('buddy',bestConfidence(grouped.buddy)>=45?'ok':'review')}else S.setState('buddy','review');
+
+    const level=num(grouped.level.map(r=>r.text).join(' '));
+    if(level&&+level<=100){$('level').value=String(+level);S.setState('level',bestConfidence(grouped.level)>=45?'ok':'review')}else S.setState('level','review');
+    for(const id of ['caught','stops','xp']){const d=num(grouped[id].map(r=>r.text).join(' '));const min=id==='xp'?4:2;if(d.length>=min){$(id).value=fmt(d);S.setState(id,bestConfidence(grouped[id])>=45?'ok':'review')}else S.setState(id,'review')}
+    const date=cleanDate(grouped.startDate.map(r=>r.text).join(' '));if(date){$('startDate').value=date;S.setState('startDate',bestConfidence(grouped.startDate)>=45?'ok':'review')}else S.setState('startDate','review');
   }
-  function prepareCrops(){ const iw=S.sourceImage.naturalWidth, ih=S.sourceImage.naturalHeight; const trainerRect={x:.37,y:.10,w:.31,h:.47}; const buddyRect={x:.08,y:.00,w:.63,h:.50}; const tc=document.createElement('canvas'); tc.width=Math.round(iw*trainerRect.w); tc.height=Math.round(ih*trainerRect.h); tc.getContext('2d').drawImage(S.sourceImage,iw*trainerRect.x,ih*trainerRect.y,iw*trainerRect.w,ih*trainerRect.h,0,0,tc.width,tc.height); const bc=document.createElement('canvas'); bc.width=Math.round(iw*buddyRect.w); bc.height=Math.round(ih*buddyRect.h); bc.getContext('2d').drawImage(S.sourceImage,iw*buddyRect.x,ih*buddyRect.y,iw*buddyRect.w,ih*buddyRect.h,0,0,bc.width,bc.height); S.trainerCrop=tc; S.buddyCrop=bc; $('retryTrainerBtn').disabled=false; $('retryBuddyBtn').disabled=false; $('trainerCutoutState').textContent='Prepared'; $('buddyCutoutState').textContent='Prepared'; $('extractStatus').textContent='Prepared'; S.drawPreviews(); S.drawFront(); }
-  const resize=(src,max=1024)=>{ const s=Math.min(1,max/Math.max(src.width,src.height)); if(s===1) return src; const c=document.createElement('canvas'); c.width=Math.round(src.width*s); c.height=Math.round(src.height*s); c.getContext('2d').drawImage(src,0,0,c.width,c.height); return c; };
-  function cleanAlpha(img,minAreaRatio=.02){ const c=document.createElement('canvas'); c.width=img.naturalWidth||img.width; c.height=img.naturalHeight||img.height; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(img,0,0,c.width,c.height); const im=g.getImageData(0,0,c.width,c.height),d=im.data,w=c.width,h=c.height,n=w*h,labels=new Int32Array(n),queue=new Int32Array(n),areas=[0]; let id=0,maxArea=0; for(let p=0;p<n;p++){ if(labels[p]||d[p*4+3]<40) continue; id++; let head=0,tail=0,area=0; queue[tail++]=p; labels[p]=id; while(head<tail){ const q=queue[head++],x=q%w,y=(q/w)|0; area++; const nb=[[x>0,q-1],[x<w-1,q+1],[y>0,q-w],[y<h-1,q+w]]; for(const [ok,nq] of nb){ if(ok&&!labels[nq]&&d[nq*4+3]>=40){ labels[nq]=id; queue[tail++]=nq; } } } areas[id]=area; maxArea=Math.max(maxArea,area); } const keep=new Uint8Array(id+1); for(let i=1;i<=id;i++) if(areas[i]>=Math.max(80,maxArea*minAreaRatio)) keep[i]=1; let minX=w,minY=h,maxX=-1,maxY=-1; for(let p=0;p<n;p++){ const lab=labels[p]; if(!lab||!keep[lab]){ d[p*4+3]=0; continue; } const x=p%w,y=(p/w)|0; if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; } g.putImageData(im,0,0); if(maxX<0) return null; const pad=Math.round(Math.max(w,h)*.02), x0=Math.max(0,minX-pad), y0=Math.max(0,minY-pad), x1=Math.min(w,maxX+pad), y1=Math.min(h,maxY+pad), out=document.createElement('canvas'); out.width=x1-x0+1; out.height=y1-y0+1; out.getContext('2d').drawImage(c,x0,y0,out.width,out.height,0,0,out.width,out.height); return out; }
-  async function removeBg(blob,device){ if(!S.removeBg){ const m=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm'); S.removeBg=m.removeBackground||m.default; } return S.removeBg(blob,{device,model:'isnet_quint8',output:{format:'image/png',quality:1,type:'foreground'}}); }
-  async function extract(kind){ const crop=kind==='trainer'?S.trainerCrop:S.buddyCrop; const label=$(kind+'CutoutState'); if(!crop) return; label.textContent='Extracting…'; $('extractStatus').textContent='Extracting '+kind+'…'; try{ const small=resize(crop,1024), blob=await new Promise(r=>small.toBlob(r,'image/png')); let out; try{ out=await removeBg(blob, navigator.gpu?'gpu':'cpu'); }catch{ out=await removeBg(blob,'cpu'); } const url=URL.createObjectURL(out), im=new Image(); await new Promise((res,rej)=>{ im.onload=res; im.onerror=rej; im.src=url; }); const cleaned=cleanAlpha(im, kind==='trainer'?0.03:0.018); URL.revokeObjectURL(url); if(!cleaned) throw new Error('empty'); if(kind==='trainer') S.trainerCutout=cleaned; else S.buddyCutout=cleaned; label.textContent='Ready'; $('extractStatus').textContent='Ready'; S.drawPreviews(); S.drawFront(); }catch(e){ console.warn(e); if(kind==='trainer') S.trainerCutout=null; else S.buddyCutout=null; label.textContent='Retry'; $('extractStatus').textContent='Needs review'; S.drawPreviews(); S.drawFront(); } }
-  S.scanProfile=async()=>{ if(!S.sourceImage||S.scanning) return; S.scanning=true; $('scanCard').classList.remove('hidden'); $('scanPct').textContent='0%'; try{ S.setTeam(S.detectTeam(S.sourceImage),true); await scanIdentity(); await scanStats(); prepareCrops(); await extract('buddy'); await extract('trainer'); }catch(e){ console.error(e); S.toast('Scan finished with review needed.'); }finally{ S.scanning=false; $('scanCard').classList.add('hidden'); S.updateQuality(); S.drawFront(); S.drawBack(); } };
-  S.extractTrainerCutout=()=>extract('trainer'); S.extractBuddyCutout=()=>extract('buddy');
+
+  async function tesseractFallback(){
+    $('scanDetail').textContent='Local OCR fallback…';
+    const C=fieldCrops();
+    const specs={trainerName:['ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'],buddy:['ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-'],level:['0123456789'],caught:['0123456789,'],stops:['0123456789,'],xp:['0123456789,'],startDate:['0123456789/-']};
+    const reads={};for(const id of Object.keys(C)){reads[id]=[];for(const c of C[id])reads[id].push(await S.read(c,'7',specs[id][0]));}
+    const trainer=cleanTrainer(reads.trainerName.map(r=>r.text).join('\n'));if(!$('trainerName').value&&trainer){$('trainerName').value=trainer;S.setState('trainerName','review')}
+    const buddy=await cleanBuddy(reads.buddy.map(r=>r.text).join('\n'),$('trainerName').value);if(!$('buddy').value&&buddy){$('buddy').value=buddy;S.setState('buddy','review')}
+    for(const id of ['level','caught','stops','xp'])if(!$(id).value){const d=num(reads[id].map(r=>r.text).join(' '));if(d){$(id).value=id==='level'?String(+d):fmt(d);S.setState(id,'review')}}
+    if(!$('startDate').value){const d=cleanDate(reads.startDate.map(r=>r.text).join(' '));if(d){$('startDate').value=d;S.setState('startDate','review')}}
+  }
+
+  S.scanProfile=async()=>{
+    if(!S.sourceImage||S.scanning)return;S.scanning=true;$('scanCard').classList.remove('hidden');$('scanPct').textContent='0%';
+    try{S.setTeam(S.detectTeam(S.sourceImage),true);try{await paddleScan();$('scanTitle').textContent='Local AI scan complete';}catch(e){console.warn('PaddleOCR failed',e);$('scanTitle').textContent='Using OCR fallback';await tesseractFallback();}S.updateQuality();S.toast('Profile scan finished. Review anything marked Review.');}
+    catch(e){console.error(e);S.toast('Profile scan needs manual review.');}
+    finally{S.scanning=false;$('scanCard').classList.add('hidden');S.drawFront();S.drawBack();}
+  };
+
+  S.autoPickSubjects=async()=>{
+    if(!S.sourceImage)return;try{$('extractStatus').textContent='AI selecting subjects…';const w=S.sourceImage.naturalWidth,h=S.sourceImage.naturalHeight;
+      S.buddyCutout=await S.segmentAtPoint(S.sourceImage,w*.38,h*.26,'buddy');$('buddyCutoutState').textContent='Ready';S.drawPreviews();S.drawFront();
+      S.trainerCutout=await S.segmentAtPoint(S.sourceImage,w*.67,h*.31,'trainer');$('trainerCutoutState').textContent='Ready';$('extractStatus').textContent='Ready';S.drawPreviews();S.drawFront();
+    }catch(e){console.warn(e);$('extractStatus').textContent='Tap subjects manually';$('pickerHelp').textContent='Automatic subject picking was not confident. Tap Trainer or Buddy, then tap that subject in the screenshot.';S.drawPreviews();S.drawFront();}
+  };
+
+  S.pickSubjectAt=async(kind,x,y)=>{
+    if(!S.sourceImage)return;const state=$(kind+'CutoutState');state.textContent='AI…';$('extractStatus').textContent='Finding '+kind+'…';
+    try{const out=await S.segmentAtPoint(S.sourceImage,x,y,kind);if(kind==='trainer')S.trainerCutout=out;else S.buddyCutout=out;state.textContent='Ready';$('extractStatus').textContent='Ready';S.drawPreviews();S.drawFront();}
+    catch(e){console.error(e);state.textContent='Retry';$('extractStatus').textContent='Needs review';S.toast('Could not isolate that subject. Tap a clearer part of it and retry.');}
+  };
+
   const canvasFrom=img=>{const max=1800,s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d',{willReadFrequently:true}).drawImage(img,0,0,c.width,c.height);return c};
-  const qrCrop=(c,b)=>{if(!b)return null; const p=Math.max(b.width,b.height)*.12,x=Math.max(0,b.x-p),y=Math.max(0,b.y-p),w=Math.min(c.width-x,b.width+2*p),h=Math.min(c.height-y,b.height+2*p),side=Math.min(c.width,c.height,Math.max(w,h)),cx=x+w/2,cy=y+h/2,sx=Math.max(0,Math.min(c.width-side,cx-side/2)),sy=Math.max(0,Math.min(c.height-side,cy-side/2)),o=document.createElement('canvas'); o.width=o.height=640; o.getContext('2d').drawImage(c,sx,sy,side,side,0,0,640,640); return o; };
-  const extractCode=t=>{ let m=t.match(/\b\d{4}[\s-]+\d{4}[\s-]+\d{4}\b/); if(m) return m[0].replace(/\D/g,''); m=t.match(/(?:^|\D)(\d{12})(?:\D|$)/); if(m) return m[1]; for(const line of t.split(/[\n\r]+/)){ const d=line.replace(/\D/g,''); if(d.length===12) return d; } return ''; };
-  async function detectQr(c){ if('BarcodeDetector' in window){ try{ const detector=new BarcodeDetector({formats:['qr_code']}); const res=await detector.detect(c); if(res.length) return {raw:res[0].rawValue||'',crop:qrCrop(c,res[0].boundingBox)}; }catch(e){ console.warn(e); } } if(window.jsQR){ try{ const g=c.getContext('2d',{willReadFrequently:true}), im=g.getImageData(0,0,c.width,c.height), r=window.jsQR(im.data,c.width,c.height,{inversionAttempts:'attemptBoth'}); if(r){ const pts=[r.location.topLeftCorner,r.location.topRightCorner,r.location.bottomLeftCorner,r.location.bottomRightCorner]; const x=Math.min(...pts.map(p=>p.x)), y=Math.min(...pts.map(p=>p.y)), X=Math.max(...pts.map(p=>p.x)), Y=Math.max(...pts.map(p=>p.y)); return {raw:r.data||'',crop:qrCrop(c,{x,y,width:X-x,height:Y-y})}; } }catch(e){ console.warn(e); } } return {raw:'',crop:null}; }
-  S.scanCode=async()=>{ if(!S.codeImage||S.codeScanning) return; S.codeScanning=true; $('codeScanStatus').textContent='Scanning…'; try{ const c=canvasFrom(S.codeImage), q=await detectQr(c); S.qrRaw=q.raw; S.qrCrop=q.crop; let code=extractCode(S.qrRaw); if(!code){ const reads=[await S.read(c,'6','0123456789 -'),await S.read(c,'11','0123456789 -')]; for(const r of reads){ code=extractCode(r.text); if(code) break; } } if(code){ $('trainerCode').value=code; $('trainerCodeState').textContent='Detected'; $('trainerCodeState').className='ok'; } else { $('trainerCodeState').textContent='Review'; $('trainerCodeState').className='review'; } $('qrStatus').textContent=S.qrCrop?'QR detected':'QR needs review'; $('qrStatus').className=S.qrCrop?'chip accent':'chip'; $('codeScanStatus').textContent=(code&&S.qrCrop)?'Ready':'Review'; S.drawBack(); }catch(e){ console.error(e); $('codeScanStatus').textContent='Review'; }finally{ S.codeScanning=false; } };
+  const qrCrop=(c,b)=>{if(!b)return null;const p=Math.max(b.width,b.height)*.12,x=Math.max(0,b.x-p),y=Math.max(0,b.y-p),w=Math.min(c.width-x,b.width+2*p),h=Math.min(c.height-y,b.height+2*p),side=Math.min(c.width,c.height,Math.max(w,h)),cx=x+w/2,cy=y+h/2,sx=Math.max(0,Math.min(c.width-side,cx-side/2)),sy=Math.max(0,Math.min(c.height-side,cy-side/2)),o=document.createElement('canvas');o.width=o.height=640;o.getContext('2d').drawImage(c,sx,sy,side,side,0,0,640,640);return o};
+  const extractCode=t=>{let m=t.match(/\b\d{4}[\s-]+\d{4}[\s-]+\d{4}\b/);if(m)return m[0].replace(/\D/g,'');m=t.match(/(?:^|\D)(\d{12})(?:\D|$)/);return m?m[1]:''};
+  async function detectQr(c){if('BarcodeDetector'in window)try{const d=new BarcodeDetector({formats:['qr_code']}),r=await d.detect(c);if(r.length)return{raw:r[0].rawValue||'',crop:qrCrop(c,r[0].boundingBox)}}catch{}if(window.jsQR)try{const g=c.getContext('2d',{willReadFrequently:true}),im=g.getImageData(0,0,c.width,c.height),r=window.jsQR(im.data,c.width,c.height,{inversionAttempts:'attemptBoth'});if(r){const p=[r.location.topLeftCorner,r.location.topRightCorner,r.location.bottomLeftCorner,r.location.bottomRightCorner],x=Math.min(...p.map(q=>q.x)),X=Math.max(...p.map(q=>q.x)),y=Math.min(...p.map(q=>q.y)),Y=Math.max(...p.map(q=>q.y));return{raw:r.data||'',crop:qrCrop(c,{x,y,width:X-x,height:Y-y})}}}catch{}return{raw:'',crop:null}}
+  S.scanCode=async()=>{if(!S.codeImage||S.codeScanning)return;S.codeScanning=true;$('codeScanStatus').textContent='Scanning…';try{const c=canvasFrom(S.codeImage),q=await detectQr(c);S.qrRaw=q.raw;S.qrCrop=q.crop;let code=extractCode(S.qrRaw);if(!code){const rr=await S.paddleReadMany([c]).catch(()=>[]);code=extractCode(rr[0]?.text||'')}if(!code){const r=await S.read(c,'6','0123456789 -');code=extractCode(r.text)}if(code){$('trainerCode').value=code;$('trainerCodeState').textContent='Detected';$('trainerCodeState').className='ok'}else{$('trainerCodeState').textContent='Review';$('trainerCodeState').className='review'}$('qrStatus').textContent=S.qrCrop?'QR detected':'QR needs review';$('qrStatus').className=S.qrCrop?'chip accent':'chip';$('codeScanStatus').textContent=code&&S.qrCrop?'Ready':'Review';S.drawBack();}catch(e){console.error(e);$('codeScanStatus').textContent='Review'}finally{S.codeScanning=false}};
 })();
