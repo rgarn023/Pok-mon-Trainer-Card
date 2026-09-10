@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v10</title>
+  <title>Trainer Card Studio v11</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v10 · local AI · no-cost</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v11 · local AI · no-cost</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> LOCAL ONLY · NO API COST · VERSION 10</div>
+        <div class="eyebrow"><i></i> LOCAL ONLY · NO API COST · VERSION 11</div>
         <h1>Build a premium trainer card from screenshots on-device.</h1>
         <p>This version keeps processing in the browser. It scans your profile screenshot, extracts trainer and buddy separately, supports a Trainer Code screenshot for the back, and flips front/back by tapping the card.</p>
       </div>
@@ -62,7 +62,18 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy cutouts</h2><p>Each subject is extracted separately. The final front card never uses a screenshot rectangle.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>AI subject picker</h2><p>Local Segment Anything isolates the exact trainer or buddy you tap. No cloud API is used.</p></div><span id="samStatus" class="chip">Not loaded</span></div>
+          <div class="pickerWrap"><canvas id="pickerCanvas" width="720" height="720"></canvas><div id="pickerEmpty">Upload a profile screenshot</div></div>
+          <div class="pickerActions">
+            <button id="autoPickBtn" class="secondary" type="button" disabled>Auto pick both</button>
+            <button id="pickTrainerBtn" class="secondary" type="button" disabled>Tap trainer</button>
+            <button id="pickBuddyBtn" class="secondary" type="button" disabled>Tap buddy</button>
+          </div>
+          <div class="row"><small id="pickerHelp">For the cleanest result, choose Trainer or Buddy, then tap directly on that subject in the screenshot. The first use downloads a local segmentation model to your browser.</small></div>
+        </section>
+
+        <section class="panel">
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer and buddy cutouts</h2><p>Each subject is extracted separately. The final front card never uses a screenshot rectangle.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -89,7 +100,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">06</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
@@ -126,8 +137,9 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="core.js?v=10"></script>
-  <script src="scanner.js?v=10"></script>
-  <script src="app.js?v=10"></script>
+  <script src="core.js?v=11"></script>
+  <script src="ai.js?v=11"></script>
+  <script src="scanner.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
