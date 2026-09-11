@@ -19,12 +19,7 @@
     return usedAI;
   }
 
-  // Default path deliberately preserves screenshot pixels. AI Vision supplies the
-  // subject boxes and profile data; foreground removal isolates each character.
-  async function buildCharacters(){
-    const exact=await S.extractSubjects();
-    return exact;
-  }
+  async function buildCharacters(){return await S.extractSubjects();}
 
   async function handleProfile(file){
     if(!file)return;
@@ -33,26 +28,17 @@
       S.jobToken++;S.scanning=false;
       revoke(S.sourceURL);S.sourceURL=url;S.sourceImage=img;S.generatedSubject=null;S.trainerCutout=null;S.buddyCutout=null;S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;
       $('thumb').src=url;$('sourceName').textContent=file.name;$('sourceMeta').textContent=meta(file);$('sourceCard').classList.remove('hidden');$('cardEmpty').classList.add('hidden');$('saveBtn').disabled=false;$('saveAnimatedBtn').disabled=false;$('rescanBtn').disabled=false;$('retryTrainerBtn').disabled=false;$('retryBuddyBtn').disabled=false;$('printDate').value=S.today();S.drawPreviews();S.drawFront();S.drawBack();
-      const ref=img;
-      await scanProfilePrimary();
-      if(S.sourceImage!==ref)return;
-      await buildCharacters();
+      const ref=img;await scanProfilePrimary();if(S.sourceImage!==ref)return;await buildCharacters();
     }catch(e){console.error(e);S.toast('Could not process that profile screenshot.')}
   }
 
   async function handleCode(file){
     if(!file)return;
-    try{
-      const {img,url}=await load(file);revoke(S.codeURL);S.codeURL=url;S.codeImage=img;
-      $('codeThumb').src=url;$('codeSourceName').textContent=file.name;$('codeSourceMeta').textContent=meta(file);$('codeSourceCard').classList.remove('hidden');$('codeEmpty').classList.add('hidden');$('rescanCodeBtn').disabled=false;await S.scanCode();
-    }catch(e){console.error(e);S.toast('Could not process that Trainer Code screenshot.')}
+    try{const {img,url}=await load(file);revoke(S.codeURL);S.codeURL=url;S.codeImage=img;$('codeThumb').src=url;$('codeSourceName').textContent=file.name;$('codeSourceMeta').textContent=meta(file);$('codeSourceCard').classList.remove('hidden');$('codeEmpty').classList.add('hidden');$('rescanCodeBtn').disabled=false;await S.scanCode();}
+    catch(e){console.error(e);S.toast('Could not process that Trainer Code screenshot.')}
   }
 
-  async function regenerateCharacters(){
-    if(!S.sourceImage)return;
-    S.generatedSubject=null;S.combinedCutout=null;S.trainerCutout=null;S.buddyCutout=null;S.drawPreviews();S.drawFront();
-    await buildCharacters();
-  }
+  async function regenerateCharacters(){if(!S.sourceImage)return;S.generatedSubject=null;S.combinedCutout=null;S.trainerCutout=null;S.buddyCutout=null;S.drawPreviews();S.drawFront();await buildCharacters();}
 
   $('profileInput').addEventListener('change',e=>handleProfile(e.target.files?.[0]||null));
   $('trainerCodeInput').addEventListener('change',e=>handleCode(e.target.files?.[0]||null));
@@ -76,13 +62,9 @@
   const setFlip=back=>{S.showingBack=!!back;$('cardFlipper').classList.toggle('flipped',S.showingBack);$('sidePill').textContent=S.showingBack?'Back':'Front';$('saveBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · high-resolution PNG';if($('saveAnimatedBtn')?.querySelector('small'))$('saveAnimatedBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · 4-second loop';};
   const flip=()=>setFlip(!S.showingBack);
   $('flipBtn').addEventListener('click',flip);$('cardStage').addEventListener('click',flip);$('cardStage').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});
-  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v18.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
+  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v20.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
 
-  $('resetBtn').addEventListener('click',async()=>{
-    const worker=S.ocr;S.ocr=null;S.hardReset();S.generatedSubject=null;S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;S.lastProfileRead=null;
-    if(worker?.terminate)worker.terminate().catch(()=>{});
-    await clearLegacyCaches();window.scrollTo({top:0,behavior:'smooth'});S.toast('Reset complete. Ready for a new profile.');
-  });
+  $('resetBtn').addEventListener('click',async()=>{const worker=S.ocr;S.ocr=null;S.hardReset();S.generatedSubject=null;S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;S.lastProfileRead=null;if(worker?.terminate)worker.terminate().catch(()=>{});await clearLegacyCaches();window.scrollTo({top:0,behavior:'smooth'});S.toast('Reset complete. Ready for a new profile.');});
 
   $('printDate').value=S.today();S.hardReset();S.generatedSubject=null;S.combinedCutout=null;$('saveAnimatedBtn').disabled=true;S.refreshOpenAIStatus?.();
 })();
