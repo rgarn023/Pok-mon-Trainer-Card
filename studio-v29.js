@@ -2,7 +2,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const kinds=['trainer','looking','favorite'];
-const fresh=()=>({trainer:{cx:.5,cy:.44,w:.72,h:.66},looking:{cx:.5,cy:.5,r:.30},favorite:{cx:.5,cy:.5,r:.30}});
+const fresh=()=>({trainer:{cx:.5,cy:.44,w:.62,h:.72},looking:{cx:.5,cy:.5,r:.30},favorite:{cx:.5,cy:.5,r:.30}});
 const state=fresh();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let gifTimer=null,combinedPanel=null;
