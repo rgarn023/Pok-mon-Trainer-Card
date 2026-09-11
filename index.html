@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v20</title>
+  <title>Trainer Card Studio v21</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=20">
-  <link rel="stylesheet" href="v14.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
+  <link rel="stylesheet" href="v14.css?v=21">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v20 · isolated text verification + grounded platform</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v21 · text-only verification + adjustable scene grounding</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 20</div>
+        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 21</div>
         <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
-        <p>Important text is read from both the original screenshot crop and a color-isolated copy designed to separate profile lettering from the trainer/buddy artwork. The extracted trainer and buddy are placed on a visible perspective surface instead of floating over the background.</p>
+        <p>Profile text now gets a dedicated second AI pass that sees only enlarged text crops, not the trainer or buddy artwork. Scene controls let you align the locked team background and contact line so grounded characters actually stand on the terrain, while flying or floating buddies can stay above it.</p>
       </div>
-      <div class="steps"><span class="active">1 Upload</span><span>2 Verify text</span><span>3 Extract</span><span>4 Save</span></div>
+      <div class="steps"><span class="active">1 Upload</span><span>2 Verify text</span><span>3 Align scene</span><span>4 Save</span></div>
     </section>
 
     <div class="layout">
@@ -31,7 +31,7 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads enlarged original and color-isolated copies of each important field while local OCR runs multiple independent passes.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads the profile, then performs a second pass using only enlarged username and buddy text crops.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
@@ -57,7 +57,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Username and buddy text are isolated from the red profile artwork before OCR. Other values are independently compared between AI and OCR. Any unresolved disagreement is marked Review instead of being treated as correct.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Username and buddy get a dedicated text-only verification pass after the normal profile read. The second pass cannot see the trainer or buddy artwork, so it must transcribe the visible lettering rather than identify the character by appearance.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -68,11 +68,11 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the isolated-text AI read and OCR consensus.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats both the normal profile read and the text-only verification pass.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The visible trainer and buddy are isolated from the screenshot without recoloring. Both are bottom-anchored to the same perspective ground plane in the locked team background.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer, buddy, and scene alignment</h2><p>The trainer stays grounded. Use the scene controls below to move/zoom the inner background and place the contact line on the actual terrain. Buddy placement can be switched between grounded and flying/floating.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer + buddy reference</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -95,7 +95,7 @@
               <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The lower ledge is treated as a real platform: shadows and feet meet the same surface line.</small></div>
+          <div class="row"><small id="extractHelp">Scene controls appear below after the page loads. Align the visible ground in the background with the trainer's feet. Use Flying / floating only for a buddy that should not touch the ground.</small></div>
         </section>
 
         <section class="panel">
@@ -129,7 +129,7 @@
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
         <div class="previewActions">
-          <p>The locked background stays unchanged. A perspective surface and contact shadow visually connect the trainer and buddy to the scene. Valor adds embers, Mystic adds frost, and Instinct adds electricity.</p>
+          <p>The locked team artwork remains the base. You can vertically align and slightly zoom the inner scene, move the contact line to the visible terrain, and set the buddy to grounded or floating. Valor adds embers, Mystic adds frost, and Instinct adds electricity.</p>
           <button id="saveBtn" class="primary" type="button" disabled><span>Save PNG <small>Current side · high resolution</small></span><b>↓</b></button>
           <button id="saveAnimatedBtn" class="secondary" type="button" disabled><span>Save animated <small>Current side · 4-second loop</small></span><b>◉</b></button>
         </div>
@@ -142,13 +142,14 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=20"></script>
-  <script src="renderer-v14.js?v=20"></script>
-  <script src="ai.js?v=20"></script>
-  <script src="scanner.js?v=20"></script>
-  <script src="openai-client.js?v=20"></script>
-  <script src="subject-generation.js?v=20"></script>
-  <script src="app.js?v=20"></script>
-  <script src="animation.js?v=20"></script>
+  <script src="core.js?v=21"></script>
+  <script src="renderer-v14.js?v=21"></script>
+  <script src="ai.js?v=21"></script>
+  <script src="scanner.js?v=21"></script>
+  <script src="openai-client.js?v=21"></script>
+  <script src="subject-generation.js?v=21"></script>
+  <script src="app.js?v=21"></script>
+  <script src="animation.js?v=21"></script>
+  <script src="v21-fixes.js?v=21"></script>
 </body>
 </html>
