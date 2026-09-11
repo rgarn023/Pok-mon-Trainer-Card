@@ -4,51 +4,51 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v25</title>
+  <title>Trainer Card Studio v26</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v24.css?v=25">
+  <link rel="stylesheet" href="studio-v26.css?v=26">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v25 · screenshot crop selector · no generative AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v26 · local OCR + separate image crops · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 25</div>
-        <h1>Build the card yourself. Let OCR handle the typing.</h1>
-        <p>No generative AI is used. OCR can fill the text, and you can now select the exact trainer and buddy areas directly on the uploaded profile screenshot before placing them on the card.</p>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 26</div>
+        <h1>Three uploads. Three separate jobs.</h1>
+        <p>The information screenshot is only for OCR. The trainer screenshot is only for the square trainer crop. The buddy screenshot is only for the circular buddy crop.</p>
       </div>
-      <div class="promise"><b>No generative content</b>No generated backgrounds, characters, Pokémon, or text. The trainer and buddy come from the exact pixels you select from your screenshot or from images you upload yourself.</div>
+      <div class="promise"><b>No AI is used.</b>There is no image generation, character identification, AI text correction, or generated card art. OCR, QR detection, cropping, and rendering run locally in your browser.</div>
     </section>
 
     <div class="layout">
       <div class="leftcol">
         <section class="panel">
-          <div class="panelhead"><div><span class="num">01</span><h2>Profile screenshot</h2><p>Upload the Pokémon GO ME profile screenshot. OCR will try to copy the visible fields and the page will estimate the team from its colors.</p></div><span class="chip">OCR + image source</span></div>
+          <div class="panelhead"><div><span class="num">01</span><h2>Information screenshot</h2><p>This upload is used only to read profile information. It is never used as the trainer or buddy image.</p></div><span class="chip">OCR only</span></div>
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
-            <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>After upload, place the trainer rectangle and buddy circle directly over the parts of the screenshot you want to use.</small></span>
+            <span class="uploadIcon">OCR</span>
+            <span class="dropcopy"><b>Choose profile information screenshot</b><small>Local Tesseract OCR tries to fill the fields below. You can edit every result.</small></span>
           </label>
-          <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile screenshot"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
-          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading screenshot with OCR</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
-          <div class="row"><button id="ocrAgainBtn" class="secondary" type="button" disabled>Run OCR again</button><small>OCR is best-effort. Every result stays editable.</small></div>
+          <div id="infoSourceCard" class="sourceCard hidden"><img id="infoThumb" alt="information screenshot"><div><b id="infoName"></b><small id="infoMeta"></small></div></div>
+          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading information screenshot</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
+          <div class="row"><button id="ocrAgainBtn" class="secondary" type="button" disabled>Run OCR again</button><small>Uncertain text is marked Review rather than guessed.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>The screenshot gives the first guess. Tap a team at any time to override it and reset the card to that team's default hue.</p></div><span id="teamStatus" class="chip accent">Waiting for screenshot</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>The information screenshot provides a local color-based guess. You can override it manually.</p></div><span id="teamStatus" class="chip">Waiting for screenshot</span></div>
           <div class="teams">
-            <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Warm red default</small></span></button>
-            <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Cool blue default</small></span></button>
-            <button class="team" data-team="instinct" type="button"><span class="crest">I</span><span><b>Instinct</b><small>Golden default</small></span></button>
+            <button class="team active" data-team="valor" type="button"><b>Valor</b><small>Red</small></button>
+            <button class="team" data-team="mystic" type="button"><b>Mystic</b><small>Blue</small></button>
+            <button class="team" data-team="instinct" type="button"><b>Instinct</b><small>Gold</small></button>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Trainer information</h2><p>OCR fills what it can. It does not identify the buddy from appearance and it does not substitute a different Pokémon name when the letters are unclear.</p></div><span id="qualityText" class="chip">0%</span></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Trainer information</h2><p>OCR only copies visible text. Nothing is inferred from the trainer or buddy artwork.</p></div><span id="qualityText" class="chip">0%</span></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName" autocomplete="off"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -62,59 +62,47 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Your images</h2><p>The selections from your profile screenshot automatically become these image slots. You can still upload a separate trainer or buddy image instead if you prefer.</p></div><span class="chip">Exact selected pixels</span></div>
-          <div class="imageGrid">
-            <div class="imageCard">
-              <h3>Trainer image</h3><p>Use the adjustable trainer rectangle on the profile screenshot, or upload another image.</p>
-              <label class="miniUpload">Choose trainer image<input id="trainerImageInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
-              <div class="thumbBox"><img id="trainerThumb" class="hidden" alt="trainer image"><span id="trainerEmpty">No trainer image yet</span></div>
-              <div class="controls">
-                <label>Zoom <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="1" max="2.4" value="1" step="0.01"></label>
-                <label>Horizontal <output id="trainerXOut">0.00</output><input id="trainerX" type="range" min="-1" max="1" value="0" step="0.01"></label>
-                <label>Vertical <output id="trainerYOut">0.00</output><input id="trainerY" type="range" min="-1" max="1" value="0" step="0.01"></label>
-              </div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>These are separate screenshots from the OCR screenshot. Resize and move the crop directly over the image you want on the card.</p></div><span class="chip">Manual crops</span></div>
+          <div class="cropGrid">
+            <div class="cropCard">
+              <h3>Trainer screenshot</h3>
+              <p>Upload a screenshot containing the trainer. Move and resize the <b>square</b> until it frames the trainer the way you want.</p>
+              <label class="miniUpload">Choose trainer screenshot<input id="trainerShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+              <div id="trainerSourceCard" class="sourceCard hidden"><img id="trainerSourceThumb" alt="trainer screenshot"><div><b id="trainerSourceName"></b><small id="trainerSourceMeta"></small></div></div>
+              <div class="cropCanvasWrap"><canvas id="trainerCropCanvas"></canvas><div id="trainerCropEmpty" class="cropEmpty">Upload a trainer screenshot</div></div>
+              <div class="cropHint">Drag inside the square to move it. Drag the white bottom-right handle to resize it.</div>
+              <div class="row"><button id="trainerApplyCrop" class="secondary" type="button">Apply trainer crop</button></div>
+              <div class="cropResult"><img id="trainerResult" class="square hidden" alt="trainer crop"><div><b>Card image</b><span id="trainerResultText">No crop yet.</span></div></div>
             </div>
-            <div class="imageCard">
-              <h3>Buddy image</h3><p>Use the adjustable buddy circle on the profile screenshot, or upload another image.</p>
-              <label class="miniUpload">Choose buddy image<input id="buddyImageInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
-              <div class="thumbBox"><img id="buddyThumb" class="hidden" alt="buddy image"><span id="buddyEmpty">No buddy image yet</span></div>
-              <div class="controls">
-                <label>Zoom <output id="buddyZoomOut">1.00×</output><input id="buddyZoom" type="range" min="1" max="2.4" value="1" step="0.01"></label>
-                <label>Horizontal <output id="buddyXOut">0.00</output><input id="buddyX" type="range" min="-1" max="1" value="0" step="0.01"></label>
-                <label>Vertical <output id="buddyYOut">0.00</output><input id="buddyY" type="range" min="-1" max="1" value="0" step="0.01"></label>
-              </div>
+
+            <div class="cropCard">
+              <h3>Buddy screenshot</h3>
+              <p>Upload a screenshot containing the buddy. Move and resize the <b>circle</b> until it frames the buddy the way you want.</p>
+              <label class="miniUpload">Choose buddy screenshot<input id="buddyShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+              <div id="buddySourceCard" class="sourceCard hidden"><img id="buddySourceThumb" alt="buddy screenshot"><div><b id="buddySourceName"></b><small id="buddySourceMeta"></small></div></div>
+              <div class="cropCanvasWrap"><canvas id="buddyCropCanvas"></canvas><div id="buddyCropEmpty" class="cropEmpty">Upload a buddy screenshot</div></div>
+              <div class="cropHint">Drag inside the circle to move it. Drag the white handle on the right edge to resize it.</div>
+              <div class="row"><button id="buddyApplyCrop" class="secondary" type="button">Apply buddy crop</button></div>
+              <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Card image</b><span id="buddyResultText">No crop yet.</span></div></div>
             </div>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Card color</h2><p>The background is an original geometric design drawn directly by code. These sliders change the actual card palette—there are no background image assets.</p></div><span class="chip">Original design</span></div>
-          <div class="colorGrid">
-            <div class="colorControl"><label>Hue <output id="hueOut">354°</output></label><input id="hue" type="range" min="0" max="359" value="354" step="1"></div>
-            <div class="colorControl"><label>Color intensity <output id="satOut">76%</output></label><input id="sat" type="range" min="25" max="100" value="76" step="1"></div>
-            <div class="colorControl"><label>Brightness <output id="lightOut">48%</output></label><input id="light" type="range" min="28" max="65" value="48" step="1"></div>
-            <div class="colorControl"><label>Current palette</label><div id="colorSwatch" class="swatch"></div></div>
-          </div>
-          <div class="row"><button id="resetColorBtn" class="secondary" type="button">Reset to team color</button><small>You can keep the team label while using any card color you prefer.</small></div>
-        </section>
-
-        <section class="panel">
-          <div class="panelhead"><div><span class="num">06</span><h2>Trainer Code</h2><p>Upload the Add Friend / Trainer Code screenshot. QR detection and code OCR run locally, or you can enter the code yourself.</p></div><span id="codeStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code</h2><p>Upload the Add Friend / Trainer Code screenshot. QR detection and code OCR run locally.</p></div><span id="codeStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="codeInput" type="file" accept="image/png,image/jpeg,image/webp">
-            <span class="uploadIcon">⌗</span>
-            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>The QR and 12-digit code appear on the back of the card.</small></span>
+            <span class="uploadIcon">QR</span>
+            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>The QR code and 12-digit number are placed on the card back.</small></span>
           </label>
-          <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="Trainer Code screenshot"><div><b id="codeName"></b><small id="codeMeta"></small></div><button id="replaceCodeBtn" class="linkbtn" type="button">Replace</button></div>
-          <div class="formgrid" style="margin-top:9px">
-            <label class="field wide"><span>Trainer code <em id="codeState">Manual</em></span><input id="trainerCode" inputmode="numeric" placeholder="0000  0000  0000"></label>
-          </div>
+          <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="Trainer Code screenshot"><div><b id="codeName"></b><small id="codeMeta"></small></div></div>
+          <div class="formgrid" style="margin-top:9px"><label class="field wide"><span>Trainer code <em id="codeState">Manual</em></span><input id="trainerCode" inputmode="numeric" placeholder="0000  0000  0000"></label></div>
           <div class="row"><span id="qrStatus" class="chip">Waiting</span><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code</button></div>
         </section>
       </div>
 
       <aside class="panel previewPanel">
-        <div class="previewHead"><div><small>LIVE PREVIEW</small><h2>Your custom card</h2></div><div class="previewMeta"><span id="sidePill" class="chip">Front</span><span id="previewTeam" class="chip accent">Valor</span></div></div>
+        <div class="previewHead"><div><small>LIVE PREVIEW</small><h2>Your trainer card</h2></div><div class="previewMeta"><span id="sidePill" class="chip">Front</span><span id="previewTeam" class="chip">Valor</span></div></div>
         <button id="flipBtn" class="flipHint" type="button">↻ Tap card to flip</button>
         <div class="canvasWrap">
           <div id="cardStage" class="cardStage" tabindex="0" role="button" aria-label="Flip trainer card">
@@ -123,10 +111,10 @@
               <div class="cardFace cardBack"><canvas id="backCanvas" width="900" height="1400"></canvas></div>
             </div>
           </div>
-          <div id="cardEmpty" class="cardEmpty"><b>Upload a profile screenshot</b><small>OCR fills the form; your card remains fully editable.</small></div>
+          <div id="cardEmpty" class="cardEmpty"><b>Upload the information screenshot</b><small>Then add separate trainer and buddy screenshots.</small></div>
         </div>
         <div class="previewActions">
-          <p>This card is rendered deterministically from form fields, your exact selected/uploaded images, and canvas drawing commands. No generated card art is used.</p>
+          <p>The card is assembled from typed/OCR text, your square trainer crop, your circular buddy crop, and deterministic canvas drawing. No AI-generated content is used.</p>
           <button id="saveBtn" class="primary" type="button" disabled><span>Save PNG <small>Front · PNG</small></span><b>↓</b></button>
         </div>
       </aside>
@@ -138,7 +126,6 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v24.js?v=25"></script>
-  <script src="selector-v25.js?v=25"></script>
+  <script src="studio-v26.js?v=26"></script>
 </body>
 </html>
