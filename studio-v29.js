@@ -127,32 +127,48 @@ function startGif(){
 }
 function rounded(g,x,y,w,h,r){g.beginPath();g.roundRect(x,y,w,h,r);}
 function ready(img){return !!(img&&img.src&&img.complete&&img.naturalWidth>0);}
+function drawCover(g,img,x,y,w,h){
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(!iw||!ih)return;
+  const sc=Math.max(w/iw,h/ih),sw=w/sc,sh=h/sc,sx=(iw-sw)/2,sy=(ih-sh)/2;
+  g.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
+function restoreCardBackground(g,x,y,w,h){
+  const bg=document.createElement('canvas');bg.width=900;bg.height=1400;const b=bg.getContext('2d');
+  const front=$('frontBgThumb'),shared=$('sharedBgThumb'),custom=ready(front)?front:ready(shared)?shared:null;
+  if(custom){
+    drawCover(b,custom,0,0,900,1400);
+    b.fillStyle='rgba(3,6,11,.22)';b.fillRect(0,0,900,1400);
+  }else{
+    const team=document.querySelector('.team.active')?.dataset.team||'valor';
+    const dark=team==='mystic'?'#061c31':team==='instinct'?'#2b2400':'#250b14';
+    const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
+    const gr=b.createLinearGradient(0,0,900,1400);gr.addColorStop(0,dark);gr.addColorStop(.42,'#101725');gr.addColorStop(1,'#070a10');b.fillStyle=gr;b.fillRect(0,0,900,1400);
+    b.save();b.globalAlpha=.16;b.strokeStyle=accent;b.lineWidth=2;for(let i=-300;i<1300;i+=90){b.beginPath();b.moveTo(i,0);b.lineTo(i+700,1400);b.stroke();}b.restore();
+  }
+  g.drawImage(bg,x,y,w,h,x,y,w,h);
+}
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=$('trainerResult');if(!c||!ready(img))return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
 
-  /* Cover the legacy trainer/buddy renderer, then draw one auto-sized combined image frame. */
+  /* Erase only the legacy trainer/buddy artwork by restoring the real card background. */
   const cleanX=55,cleanY=205,cleanW=790,cleanH=620;
-  g.save();g.fillStyle='rgba(5,8,13,.96)';rounded(g,cleanX,cleanY,cleanW,cleanH,28);g.fill();
-  g.fillStyle=accent;g.font='900 18px system-ui';g.textAlign='left';g.textBaseline='middle';g.fillText('TRAINER + BUDDY',78,232);
+  restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
 
-  const iw=img.naturalWidth,ih=img.naturalHeight;
-  if(!iw||!ih){g.restore();return;}
+  const iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return;
   const size=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
-  const maxW=750,maxH=548;
-  const fit=Math.min(maxW/iw,maxH/ih);
-  /* Size slider scales image and frame together. No cover/fill crop is applied. */
-  const sizeFactor=Math.min(1,0.4+0.3*size);
-  const scale=fit*sizeFactor;
+  const maxW=750,maxH=590,fit=Math.min(maxW/iw,maxH/ih);
+  const sizeFactor=Math.min(1,0.4+0.3*size),scale=fit*sizeFactor;
   const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
-  const pad=10,frameW=sw+pad*2,frameH=sh+pad*2;
-  const fx=450-frameW/2,fy=258+(maxH-frameH)/2;
+  const pad=6,frameW=sw+pad*2,frameH=sh+pad*2;
+  const fx=450-frameW/2,fy=205+(cleanH-frameH)/2;
 
-  g.fillStyle='rgba(0,0,0,.42)';rounded(g,fx,fy,frameW,frameH,22);g.fill();
-  g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,22);g.stroke();
+  /* This is the only visible frame: it hugs the image and scales with it. */
+  g.save();
+  g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();
+  g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
   const ix=fx+pad,iy=fy+pad;
-  g.save();rounded(g,ix,iy,sw,sh,16);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();
-  g.strokeStyle='rgba(255,255,255,.24)';g.lineWidth=2;rounded(g,ix,iy,sw,sh,16);g.stroke();
+  g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();
   g.restore();
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
@@ -178,12 +194,12 @@ function installCombined(){
   if(trainerCard){
     const h=trainerCard.querySelector('h3'),desc=trainerCard.querySelector('p');
     if(h)h.textContent='Trainer + buddy';
-    if(desc)desc.textContent='Keep both the trainer and buddy inside this one crop box. The card frame will automatically resize to this crop instead of forcing it into a preset window.';
+    if(desc)desc.textContent='Keep both the trainer and buddy inside this one crop box. The card frame hugs the cropped image and grows or shrinks with it.';
   }
   trainerInput.accept='image/png,image/jpeg,image/webp,image/gif';
   trainerInput.closest('.miniUpload')?.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.textContent='Choose trainer + buddy image or GIF';});
   const empty=$('trainerCropEmpty');if(empty)empty.textContent='Upload one image containing trainer + buddy';
-  const hint=trainerCard?.querySelector('.cropHint');if(hint)hint.textContent='One crop only. The finished card frame automatically follows this crop’s shape; no extra fill-cropping is applied.';
+  const hint=trainerCard?.querySelector('.cropHint');if(hint)hint.textContent='One crop only. The finished border sits directly around this crop and scales with the image.';
   $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
   $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');
   $('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');
