@@ -3,46 +3,36 @@
   const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const formatNum=d=>d.replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const cleanDate=t=>(t.match(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/)||[])[0]||'';
-  const lev=(a,b)=>{a=norm(a);b=norm(b);const d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const q=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=q}}return d[b.length]};
 
-  async function pokemonNames(){
-    if(S.pokemonNames)return S.pokemonNames;
-    try{const r=await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=2000');const j=await r.json();S.pokemonNames=j.results.map(x=>x.name);}catch{S.pokemonNames=[];}
-    return S.pokemonNames;
-  }
-
-  function textTokens(text){
+  function textTokens(text,allowDigits=true){
     const out=[];
     for(const line of (text||'').split(/[\r\n]+/)){
-      const compact=line.replace(/[^A-Za-z0-9_-]/g,'').replace(/^[_-]+|[_-]+$/g,'');
+      const compact=line.replace(allowDigits?/[^A-Za-z0-9_-]/g:/[^A-Za-z-]/g,'').replace(/^[_-]+|[_-]+$/g,'');
       if(compact.length>=2&&compact.length<=28)out.push(compact);
-      out.push(...(line.match(/[A-Za-z][A-Za-z0-9_-]{1,27}/g)||[]));
+      const re=allowDigits?/[A-Za-z][A-Za-z0-9_-]{1,27}/g:/[A-Za-z][A-Za-z-]{1,27}/g;
+      out.push(...(line.match(re)||[]));
     }
     return [...new Set(out.map(x=>x.replace(/^[_-]+|[_-]+$/g,'')).filter(Boolean))];
   }
 
-  function chooseTrainer(reads){
-    const blocked=new Set(['me','friends','social','level','buddy','history','scrapbook','journal','style','total','activity']);
-    const candidates=[];
-    reads.forEach(r=>textTokens(r.text).forEach(t=>{if(blocked.has(norm(t))||/^\d+$/.test(t))return;let score=(r.confidence||0);if(/[A-Za-z]/.test(t)&&/\d/.test(t))score+=45;if(t.length>=5&&t.length<=18)score+=15;candidates.push({t,score});}));
-    const freq={};candidates.forEach(c=>freq[c.t]=(freq[c.t]||0)+1);
-    candidates.forEach(c=>c.score+=(freq[c.t]-1)*35);
-    candidates.sort((a,b)=>b.score-a.score||b.t.length-a.t.length);
-    return candidates[0]?.t||'';
+  function literalConsensus(reads,{allowDigits=true,blocked=[]}={}){
+    const stop=new Set(blocked.map(norm)),groups=new Map();
+    for(const r of reads){
+      for(const t of textTokens(r.text,allowDigits)){
+        const k=norm(t);if(!k||stop.has(k)||/^\d+$/.test(t))continue;
+        const g=groups.get(k)||{value:t,count:0,total:0,max:0};g.count++;g.total+=Number(r.confidence||0);g.max=Math.max(g.max,Number(r.confidence||0));if(t.length>g.value.length)g.value=t;groups.set(k,g);
+      }
+    }
+    let best=null;for(const g of groups.values()){g.avg=g.total/g.count;g.score=g.count*70+g.avg+Math.min(g.value.length,18);if(!best||g.score>best.score)best=g;}
+    return best||{value:'',count:0,avg:0,max:0};
   }
 
-  async function chooseBuddy(reads,trainer){
-    const joined=reads.map(r=>r.text).join(' '), joinedNorm=norm(joined), names=await pokemonNames();
-    if(names.length){
-      const direct=names.filter(p=>p.length>=3&&joinedNorm.includes(norm(p))).sort((a,b)=>b.length-a.length)[0];
-      if(direct)return direct.replace(/(^|-)(\w)/g,(_,a,b)=>a+b.toUpperCase());
-    }
-    const blocked=new Set(['buddy','history','scrapbook','journal','style','friends','social','me','mega','cp']);
-    const words=textTokens(joined).map(x=>x.replace(/^mega/i,'').replace(/^\d+|\d+$/g,'')).filter(x=>x.length>=3&&!blocked.has(norm(x))&&norm(x)!==norm(trainer));
-    if(!names.length)return words[0]||'';
-    let best=['',99];
-    for(const w of words){for(const p of names){const score=lev(w,p)/Math.max(w.length,p.length);if(score<best[1])best=[p,score];}}
-    return best[1]<=.5?best[0].replace(/(^|-)(\w)/g,(_,a,b)=>a+b.toUpperCase()):(words[0]||'');
+  function chooseTrainer(reads){
+    return literalConsensus(reads,{allowDigits:true,blocked:['me','friends','social','level','buddy','history','scrapbook','journal','style','total','activity']});
+  }
+
+  function chooseBuddy(reads,trainer){
+    return literalConsensus(reads,{allowDigits:false,blocked:['buddy','history','scrapbook','journal','style','friends','social','me','mega','cp',trainer]});
   }
 
   function numberFrom(text){
@@ -64,24 +54,19 @@
   }
 
   async function readSet(normal,masked,whitelist,extraPSM=false){
-    const out=[];
-    out.push(await S.read(normal,'7',whitelist));
-    out.push(await S.read(masked,'7',whitelist));
-    out.push(await S.read(normal,'6',whitelist));
-    if(extraPSM)out.push(await S.read(masked,'13',whitelist));
-    return out;
+    const out=[];out.push(await S.read(normal,'7',whitelist));out.push(await S.read(masked,'7',whitelist));out.push(await S.read(normal,'6',whitelist));if(extraPSM)out.push(await S.read(masked,'13',whitelist));return out;
   }
 
   async function scanIdentity(token){
     $('scanDetail').textContent='Trainer name';
-    const nameNormal=S.crop(S.sourceImage,.045,.126,.40,.038,6),nameMask=S.crop(S.sourceImage,.045,.126,.40,.038,6,'maroon');
+    const nameNormal=S.crop(S.sourceImage,.045,.126,.40,.038,7),nameMask=S.crop(S.sourceImage,.045,.126,.40,.038,7,'maroon');
     const nr=await readSet(nameNormal,nameMask,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-',true);if(token!==S.jobToken)return;
-    const trainer=chooseTrainer(nr);if(trainer){$('trainerName').value=trainer;S.setState('trainerName','ok');}else S.setState('trainerName','review');
+    const trainer=chooseTrainer(nr);if(trainer.value){$('trainerName').value=trainer.value;S.setState('trainerName',trainer.count>=2||trainer.max>=70?'ok':'review');}else S.setState('trainerName','review');
 
     $('scanDetail').textContent='Buddy name';
-    const buddyNormal=S.crop(S.sourceImage,.045,.151,.40,.036,7),buddyMask=S.crop(S.sourceImage,.045,.151,.40,.036,7,'maroon');
-    const br=await readSet(buddyNormal,buddyMask,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-',true);if(token!==S.jobToken)return;
-    const buddy=await chooseBuddy(br,trainer);if(token!==S.jobToken)return;if(buddy){$('buddy').value=buddy;S.setState('buddy','ok');}else S.setState('buddy','review');
+    const buddyNormal=S.crop(S.sourceImage,.045,.151,.40,.036,8),buddyMask=S.crop(S.sourceImage,.045,.151,.40,.036,8,'maroon');
+    const br=await readSet(buddyNormal,buddyMask,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-',true);if(token!==S.jobToken)return;
+    const buddy=chooseBuddy(br,trainer.value);if(buddy.value){$('buddy').value=buddy.value;S.setState('buddy',buddy.count>=2||buddy.max>=70?'ok':'review');}else S.setState('buddy','review');
   }
 
   async function scanStats(token){
@@ -94,8 +79,7 @@
     ];
     for(const [id,label,r,mode,whitelist,rules] of jobs){
       if(token!==S.jobToken)return;$('scanDetail').textContent=label;
-      const normal=S.crop(S.sourceImage,...r,6),masked=S.crop(S.sourceImage,...r,6,mode),reads=await readSet(normal,masked,whitelist,id==='stops');
-      if(token!==S.jobToken)return;
+      const normal=S.crop(S.sourceImage,...r,6),masked=S.crop(S.sourceImage,...r,6,mode),reads=await readSet(normal,masked,whitelist,id==='stops');if(token!==S.jobToken)return;
       if(id==='startDate'){
         const pick=consensusDate(reads);if(pick){$(id).value=pick.value;S.setState(id,pick.count>=2?'ok':'review');}else S.setState(id,'review');
       }else{
@@ -105,10 +89,10 @@
   }
 
   S.scanProfile=async()=>{
-    if(!S.sourceImage||S.scanning)return;const token=++S.jobToken;S.scanning=true;$('scanCard').classList.remove('hidden');$('scanTitle').textContent='Reading profile locally…';$('scanPct').textContent='0%';
+    if(!S.sourceImage||S.scanning)return;const token=++S.jobToken;S.scanning=true;$('scanCard').classList.remove('hidden');$('scanTitle').textContent='Reading profile with OCR…';$('scanPct').textContent='OCR';
     ['trainerName','level','buddy','caught','stops','xp','startDate'].forEach(id=>{$(id).value='';S.setState(id,'manual');});
-    try{S.setTeam(S.detectTeam(S.sourceImage),true);await scanIdentity(token);await scanStats(token);if(token!==S.jobToken)return;S.updateQuality();S.toast('Profile fields scanned. Review anything marked Review.');}
-    catch(e){if(token===S.jobToken){console.error(e);S.toast('Profile scan needs manual review.');}}
+    try{S.setTeam(S.detectTeam(S.sourceImage),true);await scanIdentity(token);await scanStats(token);if(token!==S.jobToken)return;S.updateQuality();S.toast('OCR filled what it could. Review anything marked Review.');}
+    catch(e){if(token===S.jobToken){console.error(e);S.toast('OCR scan needs manual review.');}}
     finally{if(token===S.jobToken){S.scanning=false;$('scanCard').classList.add('hidden');S.drawFront();S.drawBack();}}
   };
 
