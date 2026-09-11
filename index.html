@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v27</title>
+  <title>Trainer Card Studio v28</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v27.css?v=27">
+  <link rel="stylesheet" href="studio-v27.css?v=28">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v27 · manual card builder + local OCR · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v28 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 27</div>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 28</div>
         <h1>Build the card yourself from your screenshots.</h1>
         <p>OCR only tries to copy text from the profile screenshot. Every image on the card comes directly from screenshots you choose and crop yourself.</p>
       </div>
@@ -45,6 +45,16 @@
             <button class="team" data-team="mystic" type="button"><b>Mystic</b><small>Blue</small></button>
             <button class="team" data-team="instinct" type="button"><b>Instinct</b><small>Gold</small></button>
           </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelhead"><div><span class="num">BG</span><h2>Card backgrounds</h2><p>Use the built-in team style, upload one image for both sides, or use separate images for the front and back.</p></div><span class="chip">Optional</span></div>
+          <div class="backgroundGrid">
+            <div class="backgroundCard"><h3>One image for both sides</h3><p>This becomes the background for both the front and back unless a side-specific image is uploaded.</p><label class="miniUpload">Choose shared background<input id="sharedBgInput" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="sharedBgSourceCard" class="sourceCard hidden"><img id="sharedBgThumb" alt="shared card background"><div><b id="sharedBgName"></b><small>Front + back</small></div></div></div>
+            <div class="backgroundCard"><h3>Front background</h3><p>Optional. Overrides the shared image on the front only.</p><label class="miniUpload">Choose front background<input id="frontBgInput" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="frontBgSourceCard" class="sourceCard hidden"><img id="frontBgThumb" alt="front card background"><div><b id="frontBgName"></b><small>Front only</small></div></div></div>
+            <div class="backgroundCard"><h3>Back background</h3><p>Optional. Overrides the shared image on the back only.</p><label class="miniUpload">Choose back background<input id="backBgInput" type="file" accept="image/png,image/jpeg,image/webp"></label><div id="backBgSourceCard" class="sourceCard hidden"><img id="backBgThumb" alt="back card background"><div><b id="backBgName"></b><small>Back only</small></div></div></div>
+          </div>
+          <div class="row"><button id="clearBackgroundsBtn" class="secondary" type="button">Clear custom backgrounds</button><small>Custom background files stay in your browser and are drawn directly into the exported card.</small></div>
         </section>
 
         <section class="panel">
@@ -76,6 +86,8 @@
               <div class="rangeGrid">
                 <label>Card trainer width <output id="trainerFrameWOut">520</output><input id="trainerFrameW" type="range" min="360" max="620" value="520" step="10"></label>
                 <label>Card trainer height <output id="trainerFrameHOut">560</output><input id="trainerFrameH" type="range" min="390" max="600" value="560" step="10"></label>
+                <label>Image zoom <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label>
+                <label class="checkLabel"><input id="trainerUseFull" type="checkbox"> Use whole uploaded screenshot</label>
               </div>
             </div>
 
@@ -88,6 +100,7 @@
               <div class="cropHint">Drag inside the circle to move it. Drag the white handle on the right edge to resize it.</div>
               <div class="row"><button id="buddyApplyCrop" class="secondary" type="button">Apply buddy crop</button></div>
               <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Buddy image</b><span id="buddyResultText">No crop yet.</span></div></div>
+              <div class="rangeGrid"><label>Image zoom <output id="buddyZoomOut">1.00×</output><input id="buddyZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="buddyUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
             </div>
           </div>
         </section>
@@ -105,6 +118,7 @@
               <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
               <div class="row"><button id="lookingApplyCrop" class="secondary" type="button">Apply Looking For crop</button></div>
               <div class="cropResult"><img id="lookingResult" class="circle hidden" alt="looking for crop"><div><b>Looking For image</b><span id="lookingResultText">No crop yet.</span></div></div>
+              <div class="rangeGrid"><label>Image zoom <output id="lookingZoomOut">1.00×</output><input id="lookingZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="lookingUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
             </div>
 
             <div class="optionalCard">
@@ -117,6 +131,7 @@
               <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
               <div class="row"><button id="favoriteApplyCrop" class="secondary" type="button">Apply Favorite crop</button></div>
               <div class="cropResult"><img id="favoriteResult" class="circle hidden" alt="favorite Pokémon crop"><div><b>Favorite image</b><span id="favoriteResultText">No crop yet.</span></div></div>
+              <div class="rangeGrid"><label>Image zoom <output id="favoriteZoomOut">1.00×</output><input id="favoriteZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="favoriteUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
             </div>
           </div>
         </section>
@@ -159,6 +174,6 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v27.js?v=27"></script>
+  <script src="studio-v27.js?v=28"></script>
 </body>
 </html>
