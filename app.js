@@ -63,7 +63,7 @@
   const setFlip=back=>{S.showingBack=!!back;$('cardFlipper').classList.toggle('flipped',S.showingBack);$('sidePill').textContent=S.showingBack?'Back':'Front';$('saveBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · high-resolution PNG';};
   const flip=()=>setFlip(!S.showingBack);
   $('flipBtn').addEventListener('click',flip);$('cardStage').addEventListener('click',flip);$('cardStage').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});
-  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v15.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} saved.`)});
+  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v16.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} saved.`)});
 
   $('resetBtn').addEventListener('click',async()=>{
     const worker=S.ocr;S.ocr=null;S.hardReset();S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;S.lastProfileRead=null;
