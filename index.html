@@ -4,20 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v28</title>
+  <title>Trainer Card Studio v29</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v27.css?v=28">
+  <link rel="stylesheet" href="studio-v27.css?v=29">
+  <link rel="stylesheet" href="studio-v29.css?v=29">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v28 · manual card builder + local OCR · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v29 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 28</div>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 29</div>
         <h1>Build the card yourself from your screenshots.</h1>
         <p>OCR only tries to copy text from the profile screenshot. Every image on the card comes directly from screenshots you choose and crop yourself.</p>
       </div>
@@ -72,7 +73,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. The trainer crop can be resized independently in width and height.</p></div><span class="chip">Manual crops</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. Each image now includes a live card-slot preview showing the exact zoom and shape used on the card.</p></div><span class="chip">Manual crops</span></div>
           <div class="cropGrid">
             <div class="cropCard">
               <h3>Trainer screenshot</h3>
@@ -106,7 +107,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Pokémon showcase</h2><p>These two bottom-card spots are optional. Leave either one blank or upload a screenshot and adjust the circular crop yourself.</p></div><span class="chip">Optional</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Pokémon showcase</h2><p>These optional circular slots also include a live preview, so the zoom shown here matches what will appear on the finished card.</p></div><span class="chip">Optional</span></div>
           <div class="optionalGrid">
             <div class="optionalCard">
               <h3>Looking For</h3>
@@ -174,6 +175,7 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v27.js?v=28"></script>
+  <script src="studio-v27.js?v=29"></script>
+  <script src="studio-v29.js?v=29"></script>
 </body>
 </html>
