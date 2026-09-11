@@ -9,21 +9,17 @@
   const backgrounds={};
 
   function loadLockedBackground(team){
-    fetch(`assets/locked/${team}.b64?v=19`,{cache:'no-store'})
+    fetch(`assets/locked/${team}.b64?v=20`,{cache:'no-store'})
       .then(r=>{if(!r.ok)throw new Error(`missing ${team}`);return r.text();})
       .then(b64=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src='data:image/avif;base64,'+b64.trim();}))
       .then(img=>{backgrounds[team]=img;S.drawFront?.();S.drawBack?.();})
-      .catch(()=>{const img=new Image();img.onload=()=>{backgrounds[team]=img;S.drawFront?.();S.drawBack?.();};img.src=`assets/${team}-bg.svg?v=19`;});
+      .catch(()=>{const img=new Image();img.onload=()=>{backgrounds[team]=img;S.drawFront?.();S.drawBack?.();};img.src=`assets/${team}-bg.svg?v=20`;});
   }
   ['valor','mystic','instinct'].forEach(loadLockedBackground);
 
   function panelPath(g,x,y,w,h,cut=14){g.beginPath();g.moveTo(x+cut,y);g.lineTo(x+w-cut,y);g.lineTo(x+w,y+cut);g.lineTo(x+w,y+h-cut);g.lineTo(x+w-cut,y+h);g.lineTo(x+cut,y+h);g.lineTo(x,y+h-cut);g.lineTo(x,y+cut);g.closePath();}
   function fitText(g,text,x,y,max,size,weight=900,align='center'){if(!text)return;let s=size;g.textAlign=align;g.textBaseline='middle';while(s>9){g.font=`${weight} ${s}px system-ui,-apple-system,Segoe UI,sans-serif`;if(g.measureText(text).width<=max)break;s--;}g.fillText(text,x,y,max);}
-  function bottomFit(g,img,cx,bottom,maxW,maxH,zoom=1,dx=0,dy=0){
-    const iw=img?.naturalWidth||img?.width||0,ih=img?.naturalHeight||img?.height||0;if(!iw||!ih)return;
-    const scale=Math.min(maxW/iw,maxH/ih)*zoom,nw=iw*scale,nh=ih*scale;
-    g.drawImage(img,cx-nw/2+dx,bottom-nh+dy,nw,nh);
-  }
+  function bottomFit(g,img,cx,bottom,maxW,maxH,zoom=1,dx=0,dy=0){const iw=img?.naturalWidth||img?.width||0,ih=img?.naturalHeight||img?.height||0;if(!iw||!ih)return;const scale=Math.min(maxW/iw,maxH/ih)*zoom,nw=iw*scale,nh=ih*scale;g.drawImage(img,cx-nw/2+dx,bottom-nh+dy,nw,nh);}
 
   function drawBackground(g,team){
     const bg=backgrounds[team];
@@ -52,42 +48,48 @@
     g.fillStyle=p.pale;g.font='800 11px system-ui';g.textAlign='left';g.fillText('Buddy:',338,103);g.fillStyle='#fff';fitText(g,($('buddy').value||'—').trim(),338,122,205,18,900,'left');
   }
 
+  // All three locked backgrounds have a dark foreground ledge at the same height.
+  // Add a shallow perspective plane on top of that ledge so the character feet have a real surface to contact.
+  function drawGroundPlane(g,team){
+    const p=palette[team]||palette.valor;
+    g.save();
+    const gr=g.createLinearGradient(0,614,0,676);gr.addColorStop(0,'rgba(3,5,9,.06)');gr.addColorStop(.40,'rgba(3,5,9,.22)');gr.addColorStop(1,'rgba(3,5,9,.58)');
+    g.fillStyle=gr;g.beginPath();g.moveTo(128,615);g.lineTo(472,615);g.lineTo(566,675);g.lineTo(34,675);g.closePath();g.fill();
+    g.globalAlpha=.38;g.strokeStyle=p.glow;g.lineWidth=1.2;g.beginPath();g.moveTo(128,615);g.lineTo(472,615);g.stroke();
+    g.globalAlpha=.13;g.lineWidth=.9;for(const x of [185,245,300,355,415]){g.beginPath();g.moveTo(300,615);g.lineTo(x+(x-300)*1.15,675);g.stroke();}
+    g.globalAlpha=.11;for(const y of [632,648,662]){const q=(y-615)/60,left=128-(94*q),right=472+(94*q);g.beginPath();g.moveTo(left,y);g.lineTo(right,y);g.stroke();}
+    g.restore();
+  }
+
   function drawGroundShadow(g,team){
     const p=palette[team]||palette.valor;
     g.save();
-    const gr=g.createRadialGradient(305,589,10,305,589,185);gr.addColorStop(0,'rgba(0,0,0,.42)');gr.addColorStop(.55,'rgba(0,0,0,.22)');gr.addColorStop(1,'rgba(0,0,0,0)');
-    g.fillStyle=gr;g.beginPath();g.ellipse(305,589,190,28,0,0,Math.PI*2);g.fill();
-    g.globalAlpha=.22;g.strokeStyle=p.glow;g.lineWidth=1.2;g.beginPath();g.ellipse(305,590,130,12,0,0,Math.PI*2);g.stroke();g.restore();
+    const gr=g.createRadialGradient(302,653,8,302,653,178);gr.addColorStop(0,'rgba(0,0,0,.48)');gr.addColorStop(.52,'rgba(0,0,0,.26)');gr.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=gr;g.beginPath();g.ellipse(302,653,180,20,0,0,Math.PI*2);g.fill();
+    g.globalAlpha=.20;g.strokeStyle=p.glow;g.lineWidth=1;g.beginPath();g.ellipse(302,653,112,8,0,0,Math.PI*2);g.stroke();g.restore();
   }
 
   function drawSubjects(g,team){
-    g.save();panelPath(g,24,132,552,470,18);g.clip();
-    drawGroundShadow(g,team);
-    const groundY=594;
+    g.save();panelPath(g,22,128,556,548,18);g.clip();
+    drawGroundPlane(g,team);drawGroundShadow(g,team);
+    const groundY=652;
     if(S.generatedSubject||S.combinedCutout){
-      bottomFit(g,S.generatedSubject||S.combinedCutout,300,groundY,515,438,1.06,0,0);
+      bottomFit(g,S.generatedSubject||S.combinedCutout,300,groundY,520,500,1.04,0,0);
     }else{
-      if(S.buddyCutout)bottomFit(g,S.buddyCutout,220,groundY,370,420,1.08,-8,0);
-      if(S.trainerCutout)bottomFit(g,S.trainerCutout,405,groundY,275,350,1.05,4,0);
+      // Locked composition: buddy large behind-left, trainer foreground right-center, both feet on the same plane.
+      if(S.buddyCutout)bottomFit(g,S.buddyCutout,217,groundY,390,485,1.04,-7,0);
+      if(S.trainerCutout)bottomFit(g,S.trainerCutout,407,groundY,292,405,1.04,5,0);
     }
     g.restore();
   }
 
-  function statBlock(g,label,value,cx,team){
-    const p=palette[team]||palette.valor;
-    g.textAlign='center';g.textBaseline='middle';g.fillStyle=p.pale;g.font='800 7.5px system-ui';g.fillText(label,cx,674);
-    g.fillStyle='#fff';fitText(g,value||'—',cx,704,155,21,950);
-  }
+  function statBlock(g,label,value,cx,team){const p=palette[team]||palette.valor;g.textAlign='center';g.textBaseline='middle';g.fillStyle=p.pale;g.font='800 7.5px system-ui';g.fillText(label,cx,699);g.fillStyle='#fff';fitText(g,value||'—',cx,728,155,20,950);}
   function drawStats(g,team){
-    statBlock(g,'POKÉMON CAUGHT',($('caught').value||'').trim(),118,team);
-    statBlock(g,'POKÉSTOPS VISITED',($('stops').value||'').trim(),300,team);
-    statBlock(g,'TOTAL XP',($('xp').value||'').trim(),482,team);
-    const p=palette[team]||palette.valor;g.fillStyle=p.pale;g.font='650 6.6px system-ui';g.textBaseline='middle';g.textAlign='left';g.fillText(`START  ${($('startDate').value||'—').trim()}`,42,762);g.textAlign='center';g.fillText(`PRINT DATE  ${($('printDate').value||'—').trim()}`,300,779);
+    statBlock(g,'POKÉMON CAUGHT',($('caught').value||'').trim(),118,team);statBlock(g,'POKÉSTOPS VISITED',($('stops').value||'').trim(),300,team);statBlock(g,'TOTAL XP',($('xp').value||'').trim(),482,team);
+    const p=palette[team]||palette.valor;g.fillStyle=p.pale;g.font='650 6.6px system-ui';g.textBaseline='middle';g.textAlign='left';g.fillText(`START  ${($('startDate').value||'—').trim()}`,42,765);g.textAlign='center';g.fillText(`PRINT DATE  ${($('printDate').value||'—').trim()}`,300,782);
   }
 
-  S.drawFront=()=>{
-    const c=$('cardCanvas');if(!c)return;if(c.width!==W*SCALE||c.height!==H*SCALE){c.width=W*SCALE;c.height=H*SCALE;}const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);g.save();g.scale(SCALE,SCALE);const team=S.team||'valor';drawBackground(g,team);drawAnimatedEffect(g,team);drawHeader(g,team);drawSubjects(g,team);drawStats(g,team);g.restore();
-  };
+  S.drawFront=()=>{const c=$('cardCanvas');if(!c)return;if(c.width!==W*SCALE||c.height!==H*SCALE){c.width=W*SCALE;c.height=H*SCALE;}const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);g.save();g.scale(SCALE,SCALE);const team=S.team||'valor';drawBackground(g,team);drawAnimatedEffect(g,team);drawHeader(g,team);drawSubjects(g,team);drawStats(g,team);g.restore();};
 
   S.drawBack=()=>{
     const c=$('backCanvas');if(!c)return;if(c.width!==W*SCALE||c.height!==H*SCALE){c.width=W*SCALE;c.height=H*SCALE;}const g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);g.save();g.scale(SCALE,SCALE);const team=S.team||'valor',p=palette[team]||palette.valor,cfg=S.TEAM[team];drawBackground(g,team);drawAnimatedEffect(g,team);
