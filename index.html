@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v22</title>
+  <title>Trainer Card Studio v23</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=22">
-  <link rel="stylesheet" href="v14.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="v14.css?v=23">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v22 · exact buddy text + automatic terrain grounding</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v23 · OCR + non-generative card editor</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 22</div>
-        <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
-        <p>Username and buddy text are now independently read from isolated text pixels and checked against the AI result. The trainer is automatically placed on the actual terrain line in the locked team background, while a buddy can remain grounded or be switched to flying/floating when appropriate.</p>
+        <div class="eyebrow"><i></i> CUSTOM TRAINER CARD EDITOR · VERSION 23</div>
+        <h1>Build a custom trainer card from your actual screenshot.</h1>
+        <p>No generative AI is used. OCR only tries to fill the profile fields. The trainer and buddy come directly from the uploaded screenshot, and every detected text field remains editable.</p>
       </div>
-      <div class="steps"><span class="active">1 Upload</span><span>2 Verify text</span><span>3 Auto-ground</span><span>4 Save</span></div>
+      <div class="steps"><span class="active">1 Upload</span><span>2 OCR</span><span>3 Position</span><span>4 Save</span></div>
     </section>
 
     <div class="layout">
@@ -31,24 +31,15 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>The profile is read, then username and buddy lettering get an independent exact-text verification pass.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>Local OCR will try to copy the visible text. It does not identify or guess the buddy from its appearance.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
-          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Scanning profile</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
-        </section>
-
-        <section class="panel ownerSetup">
-          <div class="panelhead"><div><span class="num">SETUP</span><h2>Owner AI connection</h2><p>Hidden during normal use. Open the page with <b>?setup=1</b> only when you need to change the Worker connection.</p></div><span id="aiStatus" class="chip">OpenAI ready</span></div>
-          <div class="formgrid">
-            <label class="field wide"><span>Cloudflare Worker URL</span><input id="aiEndpoint" autocomplete="off" inputmode="url"></label>
-            <label class="field wide"><span>Legacy access code <em>Optional</em></span><input id="aiAccessCode" type="password" autocomplete="off" placeholder="Only needed while the current Worker requires it"></label>
-          </div>
-          <div class="row"><button id="saveAIConfigBtn" class="secondary" type="button">Save AI connection</button></div>
+          <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading profile with OCR</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">OCR</b></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected from the uploaded screenshot. You can override it manually if needed.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>The page makes a local color-based guess from the screenshot. You can override it at any time.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
           <div class="teams">
             <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Fire</small></span></button>
             <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Ice</small></span></button>
@@ -57,7 +48,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Username and buddy are checked with independent local OCR on isolated text pixels plus a text-only AI pass. A locally read Pokémon name is not replaced by a different AI guess.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>OCR tries several enlarged and high-contrast reads. If the reads do not agree, the field is marked Review instead of substituting a different name.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -68,38 +59,38 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the profile read and exact-text verification.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Run OCR again</button><small>Everything remains editable if OCR misreads a character or number.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer, buddy, and scene alignment</h2><p>The locked background is automatically aligned to its terrain line. Character contact points are estimated from their transparent cutouts so feet meet the surface instead of the bottom of a tail or other protruding pixels.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer, buddy, and scene</h2><p>Automatic background removal keeps the actual screenshot pixels. Nothing is redrawn. Position the extracted pair and adjust the locked team background until the terrain sits naturally under them.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
-              <div class="subjectHead"><b>Trainer + buddy reference</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Screenshot foreground</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="trainerCanvas" width="540" height="620"></canvas><div id="trainerEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
-                <label>Preview zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
-                <label>Preview horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
-                <label>Preview vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
+                <label>Horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
+              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry background removal</button></div>
             </div>
             <div>
-              <div class="subjectHead"><b>Preserved composition</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Preserved trainer + buddy</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="buddyCanvas" width="540" height="620"></canvas><div id="buddyEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
-                <label>Preview zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
-                <label>Preview horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
-                <label>Preview vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
+                <label>Horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
+                <label>Vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
+              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry background removal</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The scene auto-aligns after extraction. Fine-tune controls appear below; use Flying / floating only when the buddy should not contact the terrain.</small></div>
+          <div class="row"><small id="extractHelp">After extraction, adjust the background and ground/contact controls below. Use Flying / floating only when the buddy should not touch the terrain.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side. The back uses the same locked team background as the front.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back. QR detection and code OCR happen locally in the browser.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
@@ -109,9 +100,9 @@
           <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="code"><div><b id="codeSourceName"></b><small id="codeSourceMeta"></small></div><button id="replaceCodeBtn" class="linkbtn" type="button">Replace</button></div>
           <div class="codeReview">
             <label class="field"><span>Trainer code <em id="trainerCodeState">Manual</em></span><input id="trainerCode" inputmode="numeric"></label>
-            <div class="qrReview"><div><b>QR code</b><small>Detected locally from the uploaded screen.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
+            <div class="qrReview"><div><b>QR code</b><small>Detected from the uploaded screen.</small></div><span id="qrStatus" class="chip">Waiting</span></div>
           </div>
-          <div id="codeEmpty" class="codeHint">The card back can be added later if you want to upload the Trainer Code screen afterward.</div>
+          <div id="codeEmpty" class="codeHint">The back can be added later if you want to upload the Trainer Code screen afterward.</div>
           <div class="row"><button id="rescanCodeBtn" class="secondary" type="button" disabled>Rescan code screen</button></div>
         </section>
       </div>
@@ -126,10 +117,10 @@
               <div class="cardFace cardBack"><canvas id="backCanvas" width="1200" height="1600"></canvas></div>
             </div>
           </div>
-          <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
+          <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The card builds from your uploaded screenshot and editable fields.</small></div>
         </div>
         <div class="previewActions">
-          <p>The full card frame is kept visible on mobile. Trainer and grounded buddy contact points are automatically aligned to the terrain; flying/floating buddies can be raised independently.</p>
+          <p>The locked team background stays consistent. Your actual screenshot foreground is layered over it; no character or card artwork is generated.</p>
           <button id="saveBtn" class="primary" type="button" disabled><span>Save PNG <small>Current side · high resolution</small></span><b>↓</b></button>
           <button id="saveAnimatedBtn" class="secondary" type="button" disabled><span>Save animated <small>Current side · 4-second loop</small></span><b>◉</b></button>
         </div>
@@ -140,16 +131,12 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=22"></script>
-  <script src="renderer-v14.js?v=22"></script>
-  <script src="ai.js?v=22"></script>
-  <script src="scanner.js?v=22"></script>
-  <script src="openai-client.js?v=22"></script>
-  <script src="subject-generation.js?v=22"></script>
-  <script src="app.js?v=22"></script>
-  <script src="animation.js?v=22"></script>
-  <script src="v21-fixes.js?v=22"></script>
+  <script src="core.js?v=23"></script>
+  <script src="renderer-v14.js?v=23"></script>
+  <script src="foreground.js?v=23"></script>
+  <script src="scanner.js?v=23"></script>
+  <script src="local-tools.js?v=23"></script>
+  <script src="app.js?v=23"></script>
+  <script src="animation.js?v=23"></script>
 </body>
 </html>
