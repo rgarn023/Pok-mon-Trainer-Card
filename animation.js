@@ -34,7 +34,7 @@
       rec.stop(); await stopped; stream.getTracks().forEach(t=>t.stop());
       const blob=new Blob(chunks,{type}),url=URL.createObjectURL(blob),a=document.createElement('a');
       const side=S.showingBack?'back':'front',name=($('trainerName').value||'trainer').replace(/\W+/g,'_');
-      a.href=url;a.download=`${name}_${S.team}_trainer_card_${side}_animated_v17.${extFor(type)}`;document.body.appendChild(a);a.click();a.remove();
+      a.href=url;a.download=`${name}_${S.team}_trainer_card_${side}_animated_v23.${extFor(type)}`;document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),4000);
       S.toast(`Animated ${side} saved as ${extFor(type).toUpperCase()}.`);
     }catch(e){console.error(e);S.toast('Could not create the animated download on this browser.');}
