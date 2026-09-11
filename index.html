@@ -4,22 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v18</title>
+  <title>Trainer Card Studio v19</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=18">
-  <link rel="stylesheet" href="v14.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="v14.css?v=19">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v18 · locked generated backgrounds + preserved characters</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v19 · exact text verification + grounded characters</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 18</div>
+        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 19</div>
         <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
-        <p>OpenAI reads the profile and team. The visible trainer and buddy are preserved from the uploaded screenshot and placed into one locked composition over the exact Valor, Mystic, or Instinct background selected for that team.</p>
+        <p>OpenAI reads the profile and team from a verification sheet with enlarged text fields. The visible trainer and buddy are preserved from the uploaded screenshot, grounded onto the card surface, and rendered over the locked Valor, Mystic, or Instinct background.</p>
       </div>
       <div class="steps"><span class="active">1 Upload</span><span>2 AI read</span><span>3 Extract</span><span>4 Save</span></div>
     </section>
@@ -31,7 +31,7 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads the profile while local verification checks the exact visible fields.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads enlarged copies of each important text field while local OCR verifies the visible values.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
@@ -57,7 +57,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>OpenAI reads the screenshot and the visible text fields are verified locally with multiple OCR passes. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>OpenAI reads enlarged field closeups and the visible text is independently checked with multiple OCR passes. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -68,11 +68,11 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the profile read and verification.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the enlarged-field AI read and local verification.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The visible trainer and buddy are isolated together from the screenshot so their clothing, colors, proportions, and overlap remain unchanged. The pair is then placed in the locked card composition.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The visible trainer and buddy are isolated from the screenshot so their clothing, colors, proportions, and overlap remain unchanged. Their feet are bottom-anchored to the terrain instead of centered in empty space.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer + buddy reference</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -95,7 +95,7 @@
               <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The card never pastes the raw screenshot rectangle; only the isolated foreground pair is rendered.</small></div>
+          <div class="row"><small id="extractHelp">Only isolated foreground pixels are rendered; the pair is grounded to the scene surface with a subtle contact shadow.</small></div>
         </section>
 
         <section class="panel">
@@ -142,13 +142,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=18"></script>
-  <script src="renderer-v14.js?v=18"></script>
-  <script src="ai.js?v=18"></script>
-  <script src="scanner.js?v=18"></script>
-  <script src="openai-client.js?v=18"></script>
-  <script src="subject-generation.js?v=18"></script>
-  <script src="app.js?v=18"></script>
-  <script src="animation.js?v=18"></script>
+  <script src="core.js?v=19"></script>
+  <script src="renderer-v14.js?v=19"></script>
+  <script src="ai.js?v=19"></script>
+  <script src="scanner.js?v=19"></script>
+  <script src="openai-client.js?v=19"></script>
+  <script src="subject-generation.js?v=19"></script>
+  <script src="app.js?v=19"></script>
+  <script src="animation.js?v=19"></script>
 </body>
 </html>
