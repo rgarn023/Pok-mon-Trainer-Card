@@ -1,12 +1,11 @@
-/* Mobile crop UX: normal mode scrolls; explicit edit mode enables direct crop dragging/resizing. */
+/* Mobile crop UX: page scrolling stays available while crop controls are active. */
 html,body{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:auto;touch-action:pan-y pinch-zoom;scrollbar-width:none;-ms-overflow-style:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar,.app::-webkit-scrollbar,.panel::-webkit-scrollbar{width:0!important;height:0!important;display:none!important;background:transparent!important}
 
 .cropCanvasWrap{position:relative;touch-action:pan-y pinch-zoom!important;overscroll-behavior:auto!important}
 .cropCanvasWrap canvas{display:block;width:100%;height:auto;touch-action:pan-y pinch-zoom!important;pointer-events:none!important}
-.cropCanvasWrap.cropEditing{outline:2px solid var(--accent);outline-offset:3px;border-radius:14px;touch-action:none!important;overscroll-behavior:contain!important}
-.cropCanvasWrap.cropEditing canvas{touch-action:none!important;pointer-events:auto!important;cursor:grab}
-.cropCanvasWrap.cropEditing canvas:active{cursor:grabbing}
+.cropCanvasWrap.cropEditing{outline:2px solid var(--accent);outline-offset:3px;border-radius:14px;touch-action:pan-y pinch-zoom!important;overscroll-behavior:auto!important}
+.cropCanvasWrap.cropEditing canvas{touch-action:pan-y pinch-zoom!important;pointer-events:none!important;cursor:default!important}
 
 .cropModeBar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.028)}
 .cropModeBtn{min-height:46px;padding:10px 14px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.05);color:#fff;font-weight:900;touch-action:manipulation;flex:0 0 auto}
@@ -17,6 +16,39 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,.app::-webkit-scrollbar,.panel::
 .cropCanvasWrap.cropEditing .cropEditBadge{opacity:1;transform:none}
 .cropHint{color:#9aa8b8}
 
+/* In edit mode the overlay itself never blocks scrolling. Only the actual handles capture touch. */
+html body .cropCanvasWrap.cropEditing{touch-action:pan-y pinch-zoom!important;overscroll-behavior:auto!important}
+html body .cropCanvasWrap.cropEditing canvas{pointer-events:none!important;touch-action:pan-y pinch-zoom!important}
+html body .cropCanvasWrap.cropEditing .tcLayer{pointer-events:none!important}
+
+/* The old full-size drag target becomes a compact center MOVE handle.
+   That leaves the rest of the screenshot free for normal vertical scrolling. */
+html body .cropCanvasWrap.cropEditing .tcMove{
+  width:64px!important;
+  height:64px!important;
+  margin:-32px 0 0 -32px!important;
+  border:3px solid #fff!important;
+  border-radius:50%!important;
+  background:color-mix(in srgb,var(--accent) 28%,rgba(5,8,13,.96))!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.68),0 0 0 4px rgba(0,0,0,.24)!important;
+  pointer-events:auto!important;
+  touch-action:none!important;
+}
+html body .cropCanvasWrap.cropEditing .tcMove:after{
+  content:'MOVE'!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  padding:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font:900 9px/1 system-ui!important;
+}
+html body .cropCanvasWrap.cropEditing .tcH{
+  pointer-events:auto!important;
+  touch-action:none!important;
+}
+
 /* Keep the existing precise button controls available as a fallback. */
 .cropAdjustBlock{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.022)}
 .cropAdjustHead{display:grid;gap:3px;margin-bottom:9px}.cropAdjustHead b{font-size:10px}.cropAdjustHead span{font-size:8px;line-height:1.35;color:var(--muted)}
@@ -26,6 +58,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,.app::-webkit-scrollbar,.panel::
 
 @media(max-width:520px){
   .cropModeBar{align-items:stretch}.cropModeBtn{width:100%}.cropModeHelp{flex-basis:100%;min-width:0;text-align:center}
+  html body .cropCanvasWrap.cropEditing .tcMove{width:70px!important;height:70px!important;margin:-35px 0 0 -35px!important}
   .cropAdjustGrid{grid-template-columns:1fr}.movePad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,52px)}.movePad button,.sizePad button{min-height:50px}.sizePad{grid-template-columns:repeat(2,minmax(120px,1fr))}
   .slotPreviewStage{min-height:120px;padding:8px}.slotPreviewShape.trainer{width:min(72vw,220px)}.slotPreviewShape.circle{width:min(52vw,180px)}
 }
