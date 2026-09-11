@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v16</title>
+  <title>Trainer Card Studio v17</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=16">
-  <link rel="stylesheet" href="v14.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="v14.css?v=17">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v16 · locked premium reference layout</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v17 · locked team backgrounds + AI characters + animation</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 16</div>
+        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 17</div>
         <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
-        <p>OpenAI reads the profile, the actual visible trainer and buddy are extracted from the uploaded screenshot, and the finished card is rendered with one locked premium composition. Valor, Mystic, and Instinct use identical geometry with only the team palette and emblem changing.</p>
+        <p>OpenAI reads the profile, recreates the trainer and buddy together in the locked card pose while preserving their original appearance and colors, then the site places them on the locked Valor, Mystic, or Instinct background. The same background is used on the front and back.</p>
       </div>
-      <div class="steps"><span class="active">1 Upload</span><span>2 Read</span><span>3 Review</span><span>4 Save</span></div>
+      <div class="steps"><span class="active">1 Upload</span><span>2 AI read</span><span>3 AI characters</span><span>4 Save</span></div>
     </section>
 
     <div class="layout">
@@ -31,7 +31,7 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">↑</span>
-            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI identifies the profile while exact field crops verify the text locally.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot</b><small>OpenAI reads the profile and uses the visible trainer + buddy as the visual reference.</small></span>
             <span class="browse">Browse</span>
           </label>
           <div id="sourceCard" class="sourceCard hidden"><img id="thumb" alt="profile"><div><b id="sourceName"></b><small id="sourceMeta"></small></div><button id="replaceBtn" class="linkbtn" type="button">Replace</button></div>
@@ -50,14 +50,14 @@
         <section class="panel">
           <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>Detected from the uploaded screenshot. You can override it manually if needed.</p></div><span id="teamStatus" class="chip accent">Waiting for upload</span></div>
           <div class="teams">
-            <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Red</small></span></button>
-            <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Blue</small></span></button>
-            <button class="team" data-team="instinct" type="button"><span class="crest">I</span><span><b>Instinct</b><small>Gold</small></span></button>
+            <button class="team" data-team="valor" type="button"><span class="crest">V</span><span><b>Valor</b><small>Fire</small></span></button>
+            <button class="team" data-team="mystic" type="button"><span class="crest">M</span><span><b>Mystic</b><small>Ice</small></span></button>
+            <button class="team" data-team="instinct" type="button"><span class="crest">I</span><span><b>Instinct</b><small>Electric</small></span></button>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>Exact Pokémon GO field regions are verified locally after the OpenAI read. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Profile details</h2><p>OpenAI reads the screenshot and exact Pokémon GO field regions are verified locally. Review anything marked Review.</p></div><div class="quality"><span><i id="qualityBar"></i></span><b id="qualityText">0%</b></div></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
@@ -68,38 +68,38 @@
             <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
             <label class="field wide"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
-          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the OpenAI read and exact local field verification.</small></div>
+          <div class="row"><button id="rescanBtn" class="secondary" type="button" disabled>Rescan profile</button><small>Rescan repeats the profile read without changing the generated character pose.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The actual visible trainer and buddy are extracted from the screenshot and placed over the custom card background. The final renderer does not redraw or regenerate them.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>OpenAI recreates the trainer and buddy from the screenshot as one transparent layer. Their card pose is locked: buddy large behind-left, trainer foreground right-center. The trainer's clothing colors are not changed to match the team.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
-              <div class="subjectHead"><b>Trainer preview</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Trainer + buddy reference</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="trainerCanvas" width="540" height="620"></canvas><div id="trainerEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
                 <label>Zoom <output id="tZoomOut">1.00×</output><input id="tZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
                 <label>Horizontal <output id="tPanXOut">0.00</output><input id="tPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Vertical <output id="tPanYOut">0.00</output><input id="tPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
+              <div class="row compact"><button id="retryTrainerBtn" class="secondary" type="button" disabled>Regenerate AI characters</button></div>
             </div>
             <div>
-              <div class="subjectHead"><b>Buddy preview</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
+              <div class="subjectHead"><b>Card composition</b><span id="buddyCutoutState" class="chip">Waiting</span></div>
               <div class="portraitPreview small"><canvas id="buddyCanvas" width="540" height="620"></canvas><div id="buddyEmpty">Upload a profile screenshot</div></div>
               <div class="controls single">
                 <label>Card character zoom <output id="bZoomOut">1.00×</output><input id="bZoom" type="range" min="0.70" max="1.90" value="1" step="0.01"></label>
                 <label>Card horizontal <output id="bPanXOut">0.00</output><input id="bPanX" type="range" min="-1" max="1" value="0" step="0.01"></label>
                 <label>Card vertical <output id="bPanYOut">0.00</output><input id="bPanY" type="range" min="-1" max="1" value="0" step="0.01"></label>
               </div>
-              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
+              <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Regenerate AI characters</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">Only the extracted foreground is placed over the card background; the profile screenshot itself is never pasted onto the card.</small></div>
+          <div class="row"><small id="extractHelp">The generated subject layer has a transparent background; the locked team background is supplied separately by the card renderer.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code screenshot</h2><p>Upload the Trainer Code screen for the back side. The back uses the same locked team background as the front.</p></div><span id="codeScanStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="trainerCodeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">⌗</span>
@@ -128,7 +128,11 @@
           </div>
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
-        <div class="previewActions"><p>The layout is locked to the premium reference design: clean matching frame, large characters, team watermark, three bottom stat blocks, and a small centered print date.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
+        <div class="previewActions">
+          <p>Valor has embers/fire glow, Mystic has drifting frost/chill, and Instinct has electric arcs. The effects animate in the webpage preview and can be exported as a short video when the browser supports it.</p>
+          <button id="saveBtn" class="primary" type="button" disabled><span>Save PNG <small>Current side · high resolution</small></span><b>↓</b></button>
+          <button id="saveAnimatedBtn" class="secondary" type="button" disabled><span>Save animated <small>Front · 4-second loop</small></span><b>◉</b></button>
+        </div>
       </aside>
     </div>
   </main>
@@ -138,11 +142,13 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=16"></script>
-  <script src="renderer-v14.js?v=16"></script>
-  <script src="ai.js?v=16"></script>
-  <script src="scanner.js?v=16"></script>
-  <script src="openai-client.js?v=16"></script>
-  <script src="app.js?v=16"></script>
+  <script src="core.js?v=17"></script>
+  <script src="renderer-v14.js?v=17"></script>
+  <script src="ai.js?v=17"></script>
+  <script src="scanner.js?v=17"></script>
+  <script src="openai-client.js?v=17"></script>
+  <script src="subject-generation.js?v=17"></script>
+  <script src="app.js?v=17"></script>
+  <script src="animation.js?v=17"></script>
 </body>
 </html>
