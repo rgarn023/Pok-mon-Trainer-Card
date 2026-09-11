@@ -4,42 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v26</title>
+  <title>Trainer Card Studio v27</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v26.css?v=26">
+  <link rel="stylesheet" href="studio-v27.css?v=27">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v26 · local OCR + separate image crops · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v27 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 26</div>
-        <h1>Three uploads. Three separate jobs.</h1>
-        <p>The information screenshot is only for OCR. The trainer screenshot is only for the square trainer crop. The buddy screenshot is only for the circular buddy crop.</p>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 27</div>
+        <h1>Build the card yourself from your screenshots.</h1>
+        <p>OCR only tries to copy text from the profile screenshot. Every image on the card comes directly from screenshots you choose and crop yourself.</p>
       </div>
-      <div class="promise"><b>No AI is used.</b>There is no image generation, character identification, AI text correction, or generated card art. OCR, QR detection, cropping, and rendering run locally in your browser.</div>
+      <div class="promise"><b>No AI is used to create or identify anything.</b>No image generation, no character recognition, no Pokémon guessing, and no AI text correction. The page uses local OCR, local QR detection, manual cropping, and deterministic canvas rendering.</div>
     </section>
 
     <div class="layout">
       <div class="leftcol">
         <section class="panel">
-          <div class="panelhead"><div><span class="num">01</span><h2>Information screenshot</h2><p>This upload is used only to read profile information. It is never used as the trainer or buddy image.</p></div><span class="chip">OCR only</span></div>
+          <div class="panelhead"><div><span class="num">01</span><h2>Profile information screenshot</h2><p>This screenshot is used only for OCR. OCR attempts to copy visible text into editable fields.</p></div><span class="chip">OCR only</span></div>
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">OCR</span>
-            <span class="dropcopy"><b>Choose profile information screenshot</b><small>Local Tesseract OCR tries to fill the fields below. You can edit every result.</small></span>
+            <span class="dropcopy"><b>Choose profile information screenshot</b><small>Local Tesseract OCR tries to read the trainer name, buddy name, level, stats, and start date.</small></span>
           </label>
           <div id="infoSourceCard" class="sourceCard hidden"><img id="infoThumb" alt="information screenshot"><div><b id="infoName"></b><small id="infoMeta"></small></div></div>
           <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading information screenshot</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
-          <div class="row"><button id="ocrAgainBtn" class="secondary" type="button" disabled>Run OCR again</button><small>Uncertain text is marked Review rather than guessed.</small></div>
+          <div class="row"><button id="ocrAgainBtn" class="secondary" type="button" disabled>Run OCR again</button><small>If OCR is uncertain, the field is marked Review instead of being guessed.</small></div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>The information screenshot provides a local color-based guess. You can override it manually.</p></div><span id="teamStatus" class="chip">Waiting for screenshot</span></div>
+          <div class="panelhead"><div><span class="num">02</span><h2>Team</h2><p>The profile screenshot provides a local color-based guess. You can always override it.</p></div><span id="teamStatus" class="chip">Waiting for screenshot</span></div>
           <div class="teams">
             <button class="team active" data-team="valor" type="button"><b>Valor</b><small>Red</small></button>
             <button class="team" data-team="mystic" type="button"><b>Mystic</b><small>Blue</small></button>
@@ -48,52 +48,85 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">03</span><h2>Trainer information</h2><p>OCR only copies visible text. Nothing is inferred from the trainer or buddy artwork.</p></div><span id="qualityText" class="chip">0%</span></div>
+          <div class="panelhead"><div><span class="num">03</span><h2>Trainer details</h2><p>These are the actual values shown on the card. OCR can fill them, but you can correct every field.</p></div><span id="qualityText" class="chip">0%</span></div>
           <div class="formgrid">
             <label class="field wide"><span>Trainer name <em id="trainerNameState">Manual</em></span><input id="trainerName" autocomplete="off"></label>
             <label class="field"><span>Level <em id="levelState">Manual</em></span><input id="level" inputmode="numeric"></label>
-            <label class="field"><span>Buddy <em id="buddyState">Manual</em></span><input id="buddy" autocomplete="off"></label>
+            <label class="field"><span>Current buddy <em id="buddyState">Manual</em></span><input id="buddy" autocomplete="off"></label>
             <label class="field"><span>Pokémon caught <em id="caughtState">Manual</em></span><input id="caught" inputmode="numeric"></label>
             <label class="field"><span>PokéStops visited <em id="stopsState">Manual</em></span><input id="stops" inputmode="numeric"></label>
             <label class="field"><span>Total XP <em id="xpState">Manual</em></span><input id="xp" inputmode="numeric"></label>
-            <label class="field"><span>Start date <em id="startDateState">Manual</em></span><input id="startDate"></label>
-            <label class="field"><span>Print date <em class="ok">Automatic</em></span><input id="printDate"></label>
+            <label class="field"><span>Started playing <em id="startDateState">Manual</em></span><input id="startDate"></label>
+            <label class="field"><span>Card date <em class="ok">Automatic</em></span><input id="printDate"></label>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>These are separate screenshots from the OCR screenshot. Resize and move the crop directly over the image you want on the card.</p></div><span class="chip">Manual crops</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. The trainer crop can be resized independently in width and height.</p></div><span class="chip">Manual crops</span></div>
           <div class="cropGrid">
             <div class="cropCard">
               <h3>Trainer screenshot</h3>
-              <p>Upload a screenshot containing the trainer. Move and resize the <b>square</b> until it frames the trainer the way you want.</p>
+              <p>Drag inside the rectangle to move it. The right handle changes width, the bottom handle changes height, and the corner changes both.</p>
               <label class="miniUpload">Choose trainer screenshot<input id="trainerShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="trainerSourceCard" class="sourceCard hidden"><img id="trainerSourceThumb" alt="trainer screenshot"><div><b id="trainerSourceName"></b><small id="trainerSourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="trainerCropCanvas"></canvas><div id="trainerCropEmpty" class="cropEmpty">Upload a trainer screenshot</div></div>
-              <div class="cropHint">Drag inside the square to move it. Drag the white bottom-right handle to resize it.</div>
+              <div class="cropHint">The crop is no longer forced to a square. Width and height are independent.</div>
               <div class="row"><button id="trainerApplyCrop" class="secondary" type="button">Apply trainer crop</button></div>
-              <div class="cropResult"><img id="trainerResult" class="square hidden" alt="trainer crop"><div><b>Card image</b><span id="trainerResultText">No crop yet.</span></div></div>
+              <div class="cropResult"><img id="trainerResult" class="rect hidden" alt="trainer crop"><div><b>Trainer image</b><span id="trainerResultText">No crop yet.</span></div></div>
+              <div class="rangeGrid">
+                <label>Card trainer width <output id="trainerFrameWOut">520</output><input id="trainerFrameW" type="range" min="360" max="620" value="520" step="10"></label>
+                <label>Card trainer height <output id="trainerFrameHOut">560</output><input id="trainerFrameH" type="range" min="390" max="600" value="560" step="10"></label>
+              </div>
             </div>
 
             <div class="cropCard">
               <h3>Buddy screenshot</h3>
-              <p>Upload a screenshot containing the buddy. Move and resize the <b>circle</b> until it frames the buddy the way you want.</p>
+              <p>Move and resize the circle around the buddy. The card uses exactly the screenshot crop you choose.</p>
               <label class="miniUpload">Choose buddy screenshot<input id="buddyShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="buddySourceCard" class="sourceCard hidden"><img id="buddySourceThumb" alt="buddy screenshot"><div><b id="buddySourceName"></b><small id="buddySourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="buddyCropCanvas"></canvas><div id="buddyCropEmpty" class="cropEmpty">Upload a buddy screenshot</div></div>
               <div class="cropHint">Drag inside the circle to move it. Drag the white handle on the right edge to resize it.</div>
               <div class="row"><button id="buddyApplyCrop" class="secondary" type="button">Apply buddy crop</button></div>
-              <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Card image</b><span id="buddyResultText">No crop yet.</span></div></div>
+              <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Buddy image</b><span id="buddyResultText">No crop yet.</span></div></div>
             </div>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">05</span><h2>Trainer Code</h2><p>Upload the Add Friend / Trainer Code screenshot. QR detection and code OCR run locally.</p></div><span id="codeStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">05</span><h2>Pokémon showcase</h2><p>These two bottom-card spots are optional. Leave either one blank or upload a screenshot and adjust the circular crop yourself.</p></div><span class="chip">Optional</span></div>
+          <div class="optionalGrid">
+            <div class="optionalCard">
+              <h3>Looking For</h3>
+              <p>Add a Pokémon the trainer is currently searching for.</p>
+              <label class="field"><span>Pokémon name <em>Optional</em></span><input id="lookingName" autocomplete="off" placeholder="e.g. Mewtwo"></label>
+              <label class="miniUpload" style="margin-top:8px">Choose screenshot<input id="lookingShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+              <div id="lookingSourceCard" class="sourceCard hidden"><img id="lookingSourceThumb" alt="looking for screenshot"><div><b id="lookingSourceName"></b><small id="lookingSourceMeta"></small></div></div>
+              <div class="cropCanvasWrap"><canvas id="lookingCropCanvas"></canvas><div id="lookingCropEmpty" class="cropEmpty">Optional screenshot</div></div>
+              <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
+              <div class="row"><button id="lookingApplyCrop" class="secondary" type="button">Apply Looking For crop</button></div>
+              <div class="cropResult"><img id="lookingResult" class="circle hidden" alt="looking for crop"><div><b>Looking For image</b><span id="lookingResultText">No crop yet.</span></div></div>
+            </div>
+
+            <div class="optionalCard">
+              <h3>Favorite Pokémon</h3>
+              <p>Add the trainer's favorite Pokémon.</p>
+              <label class="field"><span>Pokémon name <em>Optional</em></span><input id="favoriteName" autocomplete="off" placeholder="e.g. Pikachu"></label>
+              <label class="miniUpload" style="margin-top:8px">Choose screenshot<input id="favoriteShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+              <div id="favoriteSourceCard" class="sourceCard hidden"><img id="favoriteSourceThumb" alt="favorite Pokémon screenshot"><div><b id="favoriteSourceName"></b><small id="favoriteSourceMeta"></small></div></div>
+              <div class="cropCanvasWrap"><canvas id="favoriteCropCanvas"></canvas><div id="favoriteCropEmpty" class="cropEmpty">Optional screenshot</div></div>
+              <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
+              <div class="row"><button id="favoriteApplyCrop" class="secondary" type="button">Apply Favorite crop</button></div>
+              <div class="cropResult"><img id="favoriteResult" class="circle hidden" alt="favorite Pokémon crop"><div><b>Favorite image</b><span id="favoriteResultText">No crop yet.</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelhead"><div><span class="num">06</span><h2>Trainer Code</h2><p>Upload the Add Friend / Trainer Code screenshot. QR detection and number OCR run locally.</p></div><span id="codeStatus" class="chip">Waiting</span></div>
           <label class="dropzone">
             <input id="codeInput" type="file" accept="image/png,image/jpeg,image/webp">
             <span class="uploadIcon">QR</span>
-            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>The QR code and 12-digit number are placed on the card back.</small></span>
+            <span class="dropcopy"><b>Choose Trainer Code screenshot</b><small>The QR code and 12-digit trainer code are placed on the back.</small></span>
           </label>
           <div id="codeSourceCard" class="sourceCard hidden"><img id="codeThumb" alt="Trainer Code screenshot"><div><b id="codeName"></b><small id="codeMeta"></small></div></div>
           <div class="formgrid" style="margin-top:9px"><label class="field wide"><span>Trainer code <em id="codeState">Manual</em></span><input id="trainerCode" inputmode="numeric" placeholder="0000  0000  0000"></label></div>
@@ -111,10 +144,10 @@
               <div class="cardFace cardBack"><canvas id="backCanvas" width="900" height="1400"></canvas></div>
             </div>
           </div>
-          <div id="cardEmpty" class="cardEmpty"><b>Upload the information screenshot</b><small>Then add separate trainer and buddy screenshots.</small></div>
+          <div id="cardEmpty" class="cardEmpty"><b>Upload the profile screenshot</b><small>OCR fills the text; image slots remain fully manual.</small></div>
         </div>
         <div class="previewActions">
-          <p>The card is assembled from typed/OCR text, your square trainer crop, your circular buddy crop, and deterministic canvas drawing. No AI-generated content is used.</p>
+          <p>Large readable labels separate trainer identity, current buddy, activity stats, Looking For, Favorite Pokémon, dates, and Trainer Code. Nothing on the card is AI-generated.</p>
           <button id="saveBtn" class="primary" type="button" disabled><span>Save PNG <small>Front · PNG</small></span><b>↓</b></button>
         </div>
       </aside>
@@ -126,6 +159,6 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v26.js?v=26"></script>
+  <script src="studio-v27.js?v=27"></script>
 </body>
 </html>
