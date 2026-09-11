@@ -12,7 +12,7 @@
   }
   clearLegacyCaches();
 
-  async function scanProfilePrimary(){let usedAI=false;if(S.hasOpenAIConfig?.())usedAI=await S.scanProfileOpenAI();if(!usedAI)await S.scanProfile();return usedAI;}
+  async function scanProfilePrimary(){await S.scanProfile();return true;}
   async function buildCharacters(){return await S.extractSubjects();}
 
   async function handleProfile(file){
@@ -32,7 +32,6 @@
   $('trainerCodeInput').addEventListener('change',e=>handleCode(e.target.files?.[0]||null));
   $('replaceBtn').addEventListener('click',()=>$('profileInput').click());
   $('replaceCodeBtn').addEventListener('click',()=>$('trainerCodeInput').click());
-  $('saveAIConfigBtn')?.addEventListener('click',()=>S.saveOpenAIConfig());
   $('rescanBtn').addEventListener('click',async()=>{const ref=S.sourceImage;await scanProfilePrimary();if(S.sourceImage===ref){S.drawFront();S.drawBack();}});
   $('rescanCodeBtn').addEventListener('click',()=>S.scanCode());
   $('retryTrainerBtn').addEventListener('click',regenerateCharacters);
@@ -49,9 +48,9 @@
 
   const setFlip=back=>{S.showingBack=!!back;$('cardFlipper').classList.toggle('flipped',S.showingBack);$('sidePill').textContent=S.showingBack?'Back':'Front';$('saveBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · high-resolution PNG';if($('saveAnimatedBtn')?.querySelector('small'))$('saveAnimatedBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · 4-second loop';};
   const flip=()=>setFlip(!S.showingBack);$('flipBtn').addEventListener('click',flip);$('cardStage').addEventListener('click',flip);$('cardStage').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});
-  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v22.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
+  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v23.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
 
   $('resetBtn').addEventListener('click',async()=>{const worker=S.ocr;S.ocr=null;S.hardReset();S.generatedSubject=null;S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;S.lastProfileRead=null;if(worker?.terminate)worker.terminate().catch(()=>{});await clearLegacyCaches();window.scrollTo({top:0,behavior:'smooth'});S.toast('Reset complete. Ready for a new profile.');});
 
-  $('printDate').value=S.today();S.hardReset();S.generatedSubject=null;S.combinedCutout=null;$('saveAnimatedBtn').disabled=true;S.refreshOpenAIStatus?.();
+  $('printDate').value=S.today();S.hardReset();S.generatedSubject=null;S.combinedCutout=null;$('saveAnimatedBtn').disabled=true;
 })();
