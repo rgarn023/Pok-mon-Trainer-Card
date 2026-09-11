@@ -130,13 +130,29 @@ function ready(img){return !!(img&&img.src&&img.complete&&img.naturalWidth>0);}
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=$('trainerResult');if(!c||!ready(img))return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-  const px=55,py=205,pw=790,ph=620;
-  g.save();g.fillStyle='rgba(5,8,13,.96)';rounded(g,px,py,pw,ph,28);g.fill();g.strokeStyle=accent;g.lineWidth=3;rounded(g,px,py,pw,ph,28);g.stroke();
+
+  /* Cover the legacy trainer/buddy renderer, then draw one auto-sized combined image frame. */
+  const cleanX=55,cleanY=205,cleanW=790,cleanH=620;
+  g.save();g.fillStyle='rgba(5,8,13,.96)';rounded(g,cleanX,cleanY,cleanW,cleanH,28);g.fill();
   g.fillStyle=accent;g.font='900 18px system-ui';g.textAlign='left';g.textBaseline='middle';g.fillText('TRAINER + BUDDY',78,232);
-  const maxW=750,maxH=548,iw=img.naturalWidth,ih=img.naturalHeight,fit=Math.min(maxW/iw,maxH/ih),sw=iw*fit,sh=ih*fit,sx=450-sw/2,sy=258+(maxH-sh)/2;
-  g.fillStyle='#05080d';rounded(g,sx,sy,sw,sh,20);g.fill();g.save();rounded(g,sx,sy,sw,sh,20);g.clip();
-  const zoom=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1))),dw=sw*zoom,dh=sh*zoom,dx=sx+(sw-dw)/2,dy=sy+(sh-dh)/2;
-  g.drawImage(img,dx,dy,dw,dh);g.restore();g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=2;rounded(g,sx,sy,sw,sh,20);g.stroke();g.restore();
+
+  const iw=img.naturalWidth,ih=img.naturalHeight;
+  if(!iw||!ih){g.restore();return;}
+  const zoom=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
+  const maxW=750,maxH=548;
+  const fit=Math.min(maxW/iw,maxH/ih);
+  /* 1.00x means a comfortable fit; zoom changes image + frame size together, never crops inside it. */
+  const scale=Math.min(fit,fit*(0.58+0.42*zoom));
+  const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
+  const pad=10,frameW=sw+pad*2,frameH=sh+pad*2;
+  const fx=450-frameW/2,fy=258+(maxH-frameH)/2;
+
+  g.fillStyle='rgba(0,0,0,.42)';rounded(g,fx,fy,frameW,frameH,22);g.fill();
+  g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,22);g.stroke();
+  const ix=fx+pad,iy=fy+pad;
+  g.save();rounded(g,ix,iy,sw,sh,16);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();
+  g.strokeStyle='rgba(255,255,255,.24)';g.lineWidth=2;rounded(g,ix,iy,sw,sh,16);g.stroke();
+  g.restore();
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
 function saveCombined(e){
@@ -154,24 +170,24 @@ function installCombined(){
   combinedPanel.classList.add('combinedPanel');
   const head=combinedPanel.querySelector('.panelhead'),h2=head?.querySelector('h2'),p=head?.querySelector('p'),chip=head?.querySelector('.chip');
   if(h2)h2.textContent='Trainer + buddy image';
-  if(p)p.textContent='Upload one image that already contains both the trainer and buddy. Use one crop box and one zoom control, with the real card visible while you adjust it.';
-  if(chip)chip.textContent='One image · one crop';
+  if(p)p.textContent='Upload one image that already contains both the trainer and buddy. Use one crop box; the card frame automatically matches the crop proportions.';
+  if(chip)chip.textContent='One image · auto-fit frame';
   const trainerCard=trainerInput.closest('.cropCard'),buddyCard=buddyInput?.closest('.cropCard');
   buddyCard?.classList.add('removedBuddyCrop');
   if(trainerCard){
     const h=trainerCard.querySelector('h3'),desc=trainerCard.querySelector('p');
     if(h)h.textContent='Trainer + buddy';
-    if(desc)desc.textContent='Keep both the trainer and buddy inside this one crop box. The full crop becomes the single image area on the card.';
+    if(desc)desc.textContent='Keep both the trainer and buddy inside this one crop box. The card frame will automatically resize to this crop instead of forcing it into a preset window.';
   }
   trainerInput.accept='image/png,image/jpeg,image/webp,image/gif';
   trainerInput.closest('.miniUpload')?.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.textContent='Choose trainer + buddy image or GIF';});
   const empty=$('trainerCropEmpty');if(empty)empty.textContent='Upload one image containing trainer + buddy';
-  const hint=trainerCard?.querySelector('.cropHint');if(hint)hint.textContent='One crop only: keep both trainer and buddy inside the box. Swipe the rest of the image to scroll the page.';
+  const hint=trainerCard?.querySelector('.cropHint');if(hint)hint.textContent='One crop only. The finished card frame automatically follows this crop’s shape; no extra fill-cropping is applied.';
   $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
   $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');
   $('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');
   $('trainerUseFull')?.closest('label')?.style.setProperty('display','none','important');
-  const zl=$('trainerZoom')?.closest('label');if(zl&&zl.firstChild)zl.firstChild.textContent='Combined image zoom ';
+  const zl=$('trainerZoom')?.closest('label');if(zl&&zl.firstChild)zl.firstChild.textContent='Combined image size ';
   trainerInput.addEventListener('change',e=>{
     const f=e.target.files?.[0];stopGif();if(!f)return;
     const gif=f.type==='image/gif'||/\.gif$/i.test(f.name);
