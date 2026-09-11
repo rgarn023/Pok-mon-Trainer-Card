@@ -49,16 +49,32 @@ html body .cropCanvasWrap.cropEditing .tcH{
   touch-action:none!important;
 }
 
-/* Keep the existing precise button controls available as a fallback. */
-.cropAdjustBlock{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.022)}
-.cropAdjustHead{display:grid;gap:3px;margin-bottom:9px}.cropAdjustHead b{font-size:10px}.cropAdjustHead span{font-size:8px;line-height:1.35;color:var(--muted)}
-.cropAdjustGrid{display:grid;grid-template-columns:minmax(0,180px) 1fr;gap:10px;align-items:center}.movePad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,48px);gap:6px;justify-content:center}.movePad button,.sizePad button{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.045);color:#fff;font-weight:900;min-height:46px;touch-action:manipulation}.movePad button:active,.sizePad button:active{background:var(--accent);color:#080b10}.movePad [data-act=up]{grid-column:2;grid-row:1}.movePad [data-act=left]{grid-column:1;grid-row:2}.movePad .center{grid-column:2;grid-row:2;font-size:8px;color:var(--muted);opacity:.65}.movePad [data-act=right]{grid-column:3;grid-row:2}.movePad [data-act=down]{grid-column:2;grid-row:3}.sizePad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sizePad button{font-size:9px;padding:9px 8px}.cropScrollNote{margin-top:8px;font-size:8px;line-height:1.35;color:var(--accent2);text-align:center}
+/* Fine-adjustment buttons removed. The actual crop result now occupies that space. */
+.cropAdjustBlock{display:none!important}
+.cropCard,.optionalCard{display:flex;flex-direction:column}
+.cropCard>h3,.optionalCard>h3{order:1}
+.cropCard>p,.optionalCard>p{order:2}
+.optionalCard>.field{order:3}
+.cropCard>.miniUpload,.optionalCard>.miniUpload{order:4}
+.cropCard>.sourceCard,.optionalCard>.sourceCard{order:5}
+.cropCard>.cropCanvasWrap,.optionalCard>.cropCanvasWrap{order:6}
+.cropCard>.cropModeBar,.optionalCard>.cropModeBar{order:7}
+.cropCard>.cropResult,.optionalCard>.cropResult{order:8;margin:9px 0 0!important;padding:10px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:rgba(255,255,255,.022)!important;display:flex!important;align-items:center!important;gap:12px!important;min-height:120px}
+.cropCard>.cropResult:before,.optionalCard>.cropResult:before{content:'CROP PREVIEW';display:block;position:absolute;opacity:0;pointer-events:none}
+.cropCard>.cropResult img,.optionalCard>.cropResult img{max-width:min(46vw,190px)!important;max-height:220px!important;object-fit:contain!important;flex:0 0 auto}
+.cropCard>.cropResult img.circle,.optionalCard>.cropResult img.circle{width:min(44vw,180px)!important;height:min(44vw,180px)!important;border-radius:50%!important;object-fit:cover!important}
+.cropCard>.cropResult>div,.optionalCard>.cropResult>div{min-width:0;flex:1}
+.cropCard>.cropResult>div b,.optionalCard>.cropResult>div b{display:block;margin-bottom:4px;font-size:10px}
+.cropCard>.cropResult>div span,.optionalCard>.cropResult>div span{font-size:9px;line-height:1.35;color:var(--muted)}
+.cropCard>.cropHint,.optionalCard>.cropHint{order:9}
+.cropCard>.row,.optionalCard>.row{order:10}
+.cropCard>.rangeGrid,.optionalCard>.rangeGrid{order:11}
 
 .slotPreviewBlock{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.022)}.slotPreviewHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.slotPreviewHead b{font-size:10px}.slotPreviewHead span{font-size:8px;color:var(--accent2);font-weight:850}.slotPreviewStage{display:grid;place-items:center;min-height:132px;padding:10px;border-radius:12px;background:#080b10;border:1px solid rgba(255,255,255,.07);overflow:hidden}.slotPreviewShape{position:relative;overflow:hidden;background:#05080d;box-shadow:0 10px 28px rgba(0,0,0,.32)}.slotPreviewShape.trainer{width:min(100%,230px);border-radius:12px}.slotPreviewShape.circle{width:min(64vw,190px);max-width:190px;aspect-ratio:1;border-radius:50%}.slotPreviewShape canvas{display:block;width:100%;height:100%}.slotPreviewFoot{margin-top:7px;color:var(--muted);font-size:8px;line-height:1.35;text-align:center}
 
 @media(max-width:520px){
   .cropModeBar{align-items:stretch}.cropModeBtn{width:100%}.cropModeHelp{flex-basis:100%;min-width:0;text-align:center}
   html body .cropCanvasWrap.cropEditing .tcMove{width:70px!important;height:70px!important;margin:-35px 0 0 -35px!important}
-  .cropAdjustGrid{grid-template-columns:1fr}.movePad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,52px)}.movePad button,.sizePad button{min-height:50px}.sizePad{grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .cropCard>.cropResult,.optionalCard>.cropResult{align-items:flex-start!important}
   .slotPreviewStage{min-height:120px;padding:8px}.slotPreviewShape.trainer{width:min(72vw,220px)}.slotPreviewShape.circle{width:min(52vw,180px)}
 }
