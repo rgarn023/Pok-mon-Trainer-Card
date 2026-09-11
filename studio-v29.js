@@ -138,11 +138,12 @@ function renderCombinedCard(){
 
   const iw=img.naturalWidth,ih=img.naturalHeight;
   if(!iw||!ih){g.restore();return;}
-  const zoom=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
+  const size=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
   const maxW=750,maxH=548;
   const fit=Math.min(maxW/iw,maxH/ih);
-  /* 1.00x means a comfortable fit; zoom changes image + frame size together, never crops inside it. */
-  const scale=Math.min(fit,fit*(0.58+0.42*zoom));
+  /* Size slider scales image and frame together. No cover/fill crop is applied. */
+  const sizeFactor=Math.min(1,0.4+0.3*size);
+  const scale=fit*sizeFactor;
   const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
   const pad=10,frameW=sw+pad*2,frameH=sh+pad*2;
   const fx=450-frameW/2,fy=258+(maxH-frameH)/2;
