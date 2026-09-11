@@ -4,22 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v15</title>
+  <title>Trainer Card Studio v16</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=15">
-  <link rel="stylesheet" href="v14.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="v14.css?v=16">
 </head>
 <body data-team="neutral">
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v15 · exact text verification + preserved characters</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v16 · locked premium reference layout</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 15</div>
+        <div class="eyebrow"><i></i> OPENAI-ASSISTED TRAINER CARD · VERSION 16</div>
         <h1>Turn your Pokémon GO profile into a finished trainer card.</h1>
-        <p>OpenAI identifies the profile and team, exact local OCR verifies the real Pokémon GO text fields, and the trainer plus buddy are preserved together as one foreground composition so their visible overlap is not destroyed.</p>
+        <p>OpenAI reads the profile, the actual visible trainer and buddy are extracted from the uploaded screenshot, and the finished card is rendered with one locked premium composition. Valor, Mystic, and Instinct use identical geometry with only the team palette and emblem changing.</p>
       </div>
       <div class="steps"><span class="active">1 Upload</span><span>2 Read</span><span>3 Review</span><span>4 Save</span></div>
     </section>
@@ -72,7 +72,7 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The final card keeps the actual visible trainer and buddy together as one foreground layer, preserving their original overlap from the screenshot.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy</h2><p>The actual visible trainer and buddy are extracted from the screenshot and placed over the custom card background. The final renderer does not redraw or regenerate them.</p></div><span id="extractStatus" class="chip">Waiting</span></div>
           <div class="subjectGrid">
             <div>
               <div class="subjectHead"><b>Trainer preview</b><span id="trainerCutoutState" class="chip">Waiting</span></div>
@@ -95,7 +95,7 @@
               <div class="row compact"><button id="retryBuddyBtn" class="secondary" type="button" disabled>Retry extraction</button></div>
             </div>
           </div>
-          <div class="row"><small id="extractHelp">The final card never uses a pasted screenshot rectangle.</small></div>
+          <div class="row"><small id="extractHelp">Only the extracted foreground is placed over the card background; the profile screenshot itself is never pasted onto the card.</small></div>
         </section>
 
         <section class="panel">
@@ -128,7 +128,7 @@
           </div>
           <div id="cardEmpty" class="cardEmpty"><b>Upload your profile</b><small>The front builds after a profile screenshot is loaded.</small></div>
         </div>
-        <div class="previewActions"><p>Valor, Mystic, and Instinct use the same background geometry. Only the detected team color palette and team emblem change.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
+        <div class="previewActions"><p>The layout is locked to the premium reference design: clean matching frame, large characters, team watermark, three bottom stat blocks, and a small centered print date.</p><button id="saveBtn" class="primary" type="button" disabled><span>Save card <small>Exports the side currently visible</small></span><b>↓</b></button></div>
       </aside>
     </div>
   </main>
@@ -138,11 +138,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
-  <script src="core.js?v=15"></script>
-  <script src="renderer-v14.js?v=15"></script>
-  <script src="ai.js?v=15"></script>
-  <script src="scanner.js?v=15"></script>
-  <script src="openai-client.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="core.js?v=16"></script>
+  <script src="renderer-v14.js?v=16"></script>
+  <script src="ai.js?v=16"></script>
+  <script src="scanner.js?v=16"></script>
+  <script src="openai-client.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
