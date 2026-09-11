@@ -4,21 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v29</title>
+  <title>Trainer Card Studio v30</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v27.css?v=29">
-  <link rel="stylesheet" href="studio-v29.css?v=29">
+  <link rel="stylesheet" href="studio-v27.css?v=30">
+  <link rel="stylesheet" href="studio-v29.css?v=30">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v29 · manual card builder + local OCR · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v30 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 29</div>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 30</div>
         <h1>Build the card yourself from your screenshots.</h1>
         <p>OCR only tries to copy text from the profile screenshot. Every image on the card comes directly from screenshots you choose and crop yourself.</p>
       </div>
@@ -73,15 +73,15 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. Each image now includes a live card-slot preview showing the exact zoom and shape used on the card.</p></div><span class="chip">Manual crops</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. Tap Adjust crop to open a focused mobile editor; normal mode stays scroll-friendly.</p></div><span class="chip">Manual crops</span></div>
           <div class="cropGrid">
             <div class="cropCard">
               <h3>Trainer screenshot</h3>
-              <p>Drag inside the rectangle to move it. The right handle changes width, the bottom handle changes height, and the corner changes both.</p>
+              <p>In crop mode, drag inside the rectangle to move it. Large phone-friendly handles resize width, height, or both.</p>
               <label class="miniUpload">Choose trainer screenshot<input id="trainerShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="trainerSourceCard" class="sourceCard hidden"><img id="trainerSourceThumb" alt="trainer screenshot"><div><b id="trainerSourceName"></b><small id="trainerSourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="trainerCropCanvas"></canvas><div id="trainerCropEmpty" class="cropEmpty">Upload a trainer screenshot</div></div>
-              <div class="cropHint">The crop is no longer forced to a square. Width and height are independent.</div>
+              <div class="cropHint">Outside crop mode you can swipe directly over this image to scroll the page.</div>
               <div class="row"><button id="trainerApplyCrop" class="secondary" type="button">Apply trainer crop</button></div>
               <div class="cropResult"><img id="trainerResult" class="rect hidden" alt="trainer crop"><div><b>Trainer image</b><span id="trainerResultText">No crop yet.</span></div></div>
               <div class="rangeGrid">
@@ -98,7 +98,7 @@
               <label class="miniUpload">Choose buddy screenshot<input id="buddyShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="buddySourceCard" class="sourceCard hidden"><img id="buddySourceThumb" alt="buddy screenshot"><div><b id="buddySourceName"></b><small id="buddySourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="buddyCropCanvas"></canvas><div id="buddyCropEmpty" class="cropEmpty">Upload a buddy screenshot</div></div>
-              <div class="cropHint">Drag inside the circle to move it. Drag the white handle on the right edge to resize it.</div>
+              <div class="cropHint">Tap Adjust crop before moving or resizing the circle. Outside crop mode, swipe here to scroll.</div>
               <div class="row"><button id="buddyApplyCrop" class="secondary" type="button">Apply buddy crop</button></div>
               <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Buddy image</b><span id="buddyResultText">No crop yet.</span></div></div>
               <div class="rangeGrid"><label>Image zoom <output id="buddyZoomOut">1.00×</output><input id="buddyZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="buddyUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
@@ -116,7 +116,7 @@
               <label class="miniUpload" style="margin-top:8px">Choose screenshot<input id="lookingShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="lookingSourceCard" class="sourceCard hidden"><img id="lookingSourceThumb" alt="looking for screenshot"><div><b id="lookingSourceName"></b><small id="lookingSourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="lookingCropCanvas"></canvas><div id="lookingCropEmpty" class="cropEmpty">Optional screenshot</div></div>
-              <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
+              <div class="cropHint">Tap Adjust crop to edit the circle; normal mode remains scrollable.</div>
               <div class="row"><button id="lookingApplyCrop" class="secondary" type="button">Apply Looking For crop</button></div>
               <div class="cropResult"><img id="lookingResult" class="circle hidden" alt="looking for crop"><div><b>Looking For image</b><span id="lookingResultText">No crop yet.</span></div></div>
               <div class="rangeGrid"><label>Image zoom <output id="lookingZoomOut">1.00×</output><input id="lookingZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="lookingUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
@@ -129,7 +129,7 @@
               <label class="miniUpload" style="margin-top:8px">Choose screenshot<input id="favoriteShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div id="favoriteSourceCard" class="sourceCard hidden"><img id="favoriteSourceThumb" alt="favorite Pokémon screenshot"><div><b id="favoriteSourceName"></b><small id="favoriteSourceMeta"></small></div></div>
               <div class="cropCanvasWrap"><canvas id="favoriteCropCanvas"></canvas><div id="favoriteCropEmpty" class="cropEmpty">Optional screenshot</div></div>
-              <div class="cropHint">Move the circle over the Pokémon and resize it with the right-edge handle.</div>
+              <div class="cropHint">Tap Adjust crop to edit the circle; normal mode remains scrollable.</div>
               <div class="row"><button id="favoriteApplyCrop" class="secondary" type="button">Apply Favorite crop</button></div>
               <div class="cropResult"><img id="favoriteResult" class="circle hidden" alt="favorite Pokémon crop"><div><b>Favorite image</b><span id="favoriteResultText">No crop yet.</span></div></div>
               <div class="rangeGrid"><label>Image zoom <output id="favoriteZoomOut">1.00×</output><input id="favoriteZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="favoriteUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
@@ -175,7 +175,7 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v27.js?v=29"></script>
-  <script src="studio-v29.js?v=29"></script>
+  <script src="studio-v27.js?v=30"></script>
+  <script src="studio-v29.js?v=30"></script>
 </body>
 </html>
