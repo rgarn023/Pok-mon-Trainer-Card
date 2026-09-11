@@ -19,11 +19,11 @@
     return usedAI;
   }
 
+  // Default path deliberately preserves screenshot pixels. AI Vision supplies the
+  // subject boxes and profile data; foreground removal isolates each character.
   async function buildCharacters(){
-    let generated=false;
-    if(S.generateSubjectOpenAI&&S.hasOpenAIConfig?.()) generated=await S.generateSubjectOpenAI();
-    if(!generated) await S.extractSubjects();
-    return generated;
+    const exact=await S.extractSubjects();
+    return exact;
   }
 
   async function handleProfile(file){
@@ -73,10 +73,10 @@
   $('trainerCode').addEventListener('input',()=>{$('trainerCodeState').textContent='Manual';$('trainerCodeState').className='';});
   $('trainerCode').addEventListener('blur',()=>{$('trainerCode').value=S.formatCode($('trainerCode').value);S.drawBack()});
 
-  const setFlip=back=>{S.showingBack=!!back;$('cardFlipper').classList.toggle('flipped',S.showingBack);$('sidePill').textContent=S.showingBack?'Back':'Front';$('saveBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · high-resolution PNG';$('saveAnimatedBtn')?.querySelector('small')&&($('saveAnimatedBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · 4-second loop');};
+  const setFlip=back=>{S.showingBack=!!back;$('cardFlipper').classList.toggle('flipped',S.showingBack);$('sidePill').textContent=S.showingBack?'Back':'Front';$('saveBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · high-resolution PNG';if($('saveAnimatedBtn')?.querySelector('small'))$('saveAnimatedBtn').querySelector('small').textContent=(S.showingBack?'Back':'Front')+' · 4-second loop';};
   const flip=()=>setFlip(!S.showingBack);
   $('flipBtn').addEventListener('click',flip);$('cardStage').addEventListener('click',flip);$('cardStage').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});
-  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v17.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
+  $('saveBtn').addEventListener('click',()=>{S.drawFront();S.drawBack();const canvas=S.showingBack?$('backCanvas'):$('cardCanvas'),a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`${($('trainerName').value||'trainer').replace(/\W+/g,'_')}_${S.team}_trainer_card_${S.showingBack?'back':'front'}_v18.png`;a.click();S.toast(`${S.showingBack?'Back':'Front'} PNG saved.`)});
 
   $('resetBtn').addEventListener('click',async()=>{
     const worker=S.ocr;S.ocr=null;S.hardReset();S.generatedSubject=null;S.combinedCutout=null;S.openAITrainerBox=null;S.openAIBuddyBox=null;S.lastProfileRead=null;
