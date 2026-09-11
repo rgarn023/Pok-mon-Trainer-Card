@@ -1,5 +1,9 @@
-.cardStage{aspect-ratio:3/4;width:min(100%,390px)}
+.cardStage{aspect-ratio:3/4;width:min(100%,360px);max-width:calc(100vw - 54px)}
 .ownerSetup{display:none}.show-owner-setup .ownerSetup{display:block}
+.previewPanel{overflow:visible}
+.canvasWrap{overflow:visible;padding-left:20px;padding-right:20px}
+.cardFace{overflow:visible!important;border-radius:0!important}
+.cardFace canvas{border-radius:0!important}
 .previewActions>.secondary{width:100%;margin-top:8px;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:12px 14px}
 .previewActions>.secondary small{display:block;font-size:8px;color:var(--muted);margin-top:2px}
-@media(max-width:900px){.cardStage{width:min(92vw,390px)}}
+@media(max-width:900px){.cardStage{width:min(84vw,360px);max-width:calc(100vw - 44px)}}
