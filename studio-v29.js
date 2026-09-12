@@ -152,11 +152,12 @@ function restoreCardBackground(g,x,y,w,h){
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=trainerOutput;if(!c||!img||!img.width||!img.height)return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-  const cleanX=35,cleanY=175,cleanW=830,cleanH=695;restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
-  const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,2),maxW=810,maxH=675,fit=Math.min(maxW/iw,maxH/ih);
-  const sizeFactor=Math.min(1,.52+.32*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=6,frameW=sw+12,frameH=sh+12,fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
-  g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
-  const ix=fx+pad,iy=fy+pad;g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
+  /* Let the combined crop grow almost to the card's inner border while still staying above the stats. */
+  const cleanX=18,cleanY=150,cleanW=864,cleanH=720;restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
+  const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,3),maxW=842,maxH=704,fit=Math.min(maxW/iw,maxH/ih);
+  const sizeFactor=Math.min(1.12,.58+.18*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=5,frameW=sw+10,frameH=sh+10,fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
+  g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,16);g.fill();g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,16);g.stroke();
+  const ix=fx+pad,iy=fy+pad;g.save();rounded(g,ix,iy,sw,sh,12);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
 
@@ -175,10 +176,11 @@ function install(){
     $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
     $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');$('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');$('trainerUseFull')?.closest('label')?.style.setProperty('display','none','important');
   }
+  const zoom=$('trainerZoom');if(zoom){zoom.max='3';zoom.step='0.05';}
   if(profile){profile.accept='image/png,image/jpeg,image/webp,image/gif';profile.addEventListener('change',e=>{stopGif();const f=e.target.files?.[0];trainerGif=!!(f&&(f.type==='image/gif'||/\.gif$/i.test(f.name)));setTimeout(waitForTrainerSource,0);});}
   installTrainerLayer();installMode('trainer');installMode('looking');installMode('favorite');
   $('trainerApplyCrop')?.addEventListener('click',()=>applyTrainerCrop(true),true);
-  $('trainerZoom')?.addEventListener('input',renderCombinedCard);
+  zoom?.addEventListener('input',renderCombinedCard);
   if(combinedPanel&&'IntersectionObserver'in window){new IntersectionObserver(es=>document.body.classList.toggle('combinedWatch',es.some(x=>x.isIntersecting)),{threshold:.04}).observe(combinedPanel);}
   $('saveBtn')?.addEventListener('click',saveCombined,true);
   $('resetBtn')?.addEventListener('click',()=>{stopGif();trainerGif=false;trainerCrop=freshTrainer();trainerOutput=null;const c=$('trainerCropCanvas');if(c){c.width=1;c.height=1;}$('trainerCropEmpty')?.classList.remove('hidden');positionTrainerHandles();});
