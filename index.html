@@ -4,21 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v33</title>
+  <title>Trainer Card Studio v34</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v27.css?v=33">
-  <link rel="stylesheet" href="studio-v29.css?v=33">
+  <link rel="stylesheet" href="studio-v27.css?v=34">
+  <link rel="stylesheet" href="studio-v29.css?v=34">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v33 · manual card builder + local OCR · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v34 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 33</div>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 34</div>
         <h1>Build the card yourself from your screenshots.</h1>
         <p>The profile screenshot or animated GIF is used for OCR and also becomes the source for the combined Trainer + Buddy crop.</p>
       </div>
@@ -32,7 +32,7 @@
           <label class="dropzone">
             <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
             <span class="uploadIcon">OCR</span>
-            <span class="dropcopy"><b>Choose profile screenshot or animated GIF</b><small>Local Tesseract OCR reads the profile information, and the same file is reused automatically for the Trainer + Buddy image.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot or animated GIF</b><small>Local Tesseract OCR reads the trainer name, buddy name, level, stats, and start date.</small></span>
           </label>
           <div id="infoSourceCard" class="sourceCard hidden"><img id="infoThumb" alt="information screenshot"><div><b id="infoName"></b><small id="infoMeta"></small></div></div>
           <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading information screenshot</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
@@ -87,7 +87,7 @@
               <div class="rangeGrid">
                 <label>Card trainer width <output id="trainerFrameWOut">520</output><input id="trainerFrameW" type="range" min="360" max="620" value="520" step="10"></label>
                 <label>Card trainer height <output id="trainerFrameHOut">560</output><input id="trainerFrameH" type="range" min="390" max="600" value="560" step="10"></label>
-                <label>Combined image size <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label>
+                <label>Combined image size <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="0.25" max="3" value="1" step="0.05"></label>
                 <label class="checkLabel"><input id="trainerUseFull" type="checkbox"> Use whole uploaded screenshot</label>
               </div>
             </div>
@@ -163,7 +163,7 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v27.js?v=33"></script>
-  <script src="studio-v29.js?v=33"></script>
+  <script src="studio-v27.js?v=34"></script>
+  <script src="studio-v29.js?v=34"></script>
 </body>
 </html>
