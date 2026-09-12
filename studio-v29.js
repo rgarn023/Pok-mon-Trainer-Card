@@ -150,15 +150,17 @@ function restoreCardBackground(g,x,y,w,h){
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=$('trainerResult');if(!c||!ready(img))return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-  const cleanX=55,cleanY=205,cleanW=790,cleanH=620;
+  /* Use nearly all of the upper card while stopping just above the activity stats. */
+  const cleanX=35,cleanY=175,cleanW=830,cleanH=695;
   restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
   const iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return;
   const size=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
-  const maxW=750,maxH=590,fit=Math.min(maxW/iw,maxH/ih);
-  const sizeFactor=Math.min(1,0.4+0.3*size),scale=fit*sizeFactor;
+  const maxW=810,maxH=675,fit=Math.min(maxW/iw,maxH/ih);
+  /* 1.00x is larger than before; the upper end fills the available card area. */
+  const sizeFactor=Math.min(1,.52+.32*size),scale=fit*sizeFactor;
   const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
   const pad=6,frameW=sw+pad*2,frameH=sh+pad*2;
-  const fx=450-frameW/2,fy=205+(cleanH-frameH)/2;
+  const fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
   g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();
   g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
   const ix=fx+pad,iy=fy+pad;
