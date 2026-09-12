@@ -95,7 +95,7 @@ function drag(el,k,modeName){
 function mode(k,on){
   const c=$(k+'CropCanvas'),w=c?.closest('.cropCanvasWrap'),b=$(k+'Mode'),h=$(k+'Help');
   if(!c||!w||!b)return;
-  if(on&&c.width<=1){if(h)h.innerHTML='<strong>Upload an image first.</strong>';return;}
+  if(on&&c.width<=1){if(h)h.innerHTML='<strong>Upload the profile/OCR screenshot first.</strong>';return;}
   kinds.forEach(x=>{if(x!==k&&$(x+'CropCanvas')?.closest('.cropCanvasWrap')?.classList.contains('cropEditing'))mode(x,false)});
   w.classList.toggle('cropEditing',on);b.classList.toggle('active',on);b.textContent=on?'Done adjusting':'Adjust crop';
   if(h)h.innerHTML=on?'<strong>Adjust crop:</strong> drag MOVE or a resize handle. Swipe anywhere else on the image to scroll.':'<strong>Ready:</strong> tap Adjust crop to move or resize the crop box.';
@@ -150,11 +150,8 @@ function restoreCardBackground(g,x,y,w,h){
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=$('trainerResult');if(!c||!ready(img))return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-
-  /* Erase only the legacy trainer/buddy artwork by restoring the real card background. */
   const cleanX=55,cleanY=205,cleanW=790,cleanH=620;
   restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
-
   const iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return;
   const size=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
   const maxW=750,maxH=590,fit=Math.min(maxW/iw,maxH/ih);
@@ -162,14 +159,10 @@ function renderCombinedCard(){
   const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
   const pad=6,frameW=sw+pad*2,frameH=sh+pad*2;
   const fx=450-frameW/2,fy=205+(cleanH-frameH)/2;
-
-  /* This is the only visible frame: it hugs the image and scales with it. */
-  g.save();
-  g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();
+  g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();
   g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
   const ix=fx+pad,iy=fy+pad;
-  g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();
-  g.restore();
+  g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
 function saveCombined(e){
@@ -181,30 +174,46 @@ function saveCombined(e){
   const a=document.createElement('a'),name=($('trainerName')?.value||'trainer').replace(/\W+/g,'_'),team=document.querySelector('.team.active')?.dataset.team||'team';
   a.href=c.toDataURL('image/png');a.download=`${name}_${team}_trainer_card_${flipped?'back':'front'}_combined.png`;a.click();
 }
+function copyProfileToTrainer(file,trainerInput){
+  if(!file||!trainerInput)return;
+  try{
+    const dt=new DataTransfer();dt.items.add(file);trainerInput.files=dt.files;
+    trainerInput.dispatchEvent(new Event('change',{bubbles:true}));
+  }catch(err){console.error('Could not reuse profile screenshot for crop editor',err);}
+}
 function installCombined(){
-  const trainerInput=$('trainerShotInput'),buddyInput=$('buddyShotInput');if(!trainerInput)return;
+  const trainerInput=$('trainerShotInput'),buddyInput=$('buddyShotInput'),profileInput=$('profileInput');if(!trainerInput)return;
   combinedPanel=trainerInput.closest('section.panel');if(!combinedPanel)return;
   combinedPanel.classList.add('combinedPanel');
   const head=combinedPanel.querySelector('.panelhead'),h2=head?.querySelector('h2'),p=head?.querySelector('p'),chip=head?.querySelector('.chip');
   if(h2)h2.textContent='Trainer + buddy image';
-  if(p)p.textContent='Upload one image that already contains both the trainer and buddy. Use one crop box; the card frame automatically matches the crop proportions.';
-  if(chip)chip.textContent='One image · auto-fit frame';
+  if(p)p.textContent='This automatically uses the same screenshot you selected for Profile information/OCR. Adjust one crop box around the trainer and buddy; there is no second upload.';
+  if(chip)chip.textContent='Uses OCR screenshot';
   const trainerCard=trainerInput.closest('.cropCard'),buddyCard=buddyInput?.closest('.cropCard');
   buddyCard?.classList.add('removedBuddyCrop');
   if(trainerCard){
     const h=trainerCard.querySelector('h3'),desc=trainerCard.querySelector('p');
     if(h)h.textContent='Trainer + buddy';
-    if(desc)desc.textContent='Keep both the trainer and buddy inside this one crop box. The card frame hugs the cropped image and grows or shrinks with it.';
+    if(desc)desc.textContent='The Profile/OCR screenshot above is reused here automatically. Keep both the trainer and buddy inside this one crop box.';
+    const note=document.createElement('div');note.className='cropHint';note.style.margin='0 0 10px';note.innerHTML='<strong>Source:</strong> Profile information / OCR screenshot';
+    trainerCard.querySelector('.miniUpload')?.insertAdjacentElement('beforebegin',note);
   }
-  trainerInput.accept='image/png,image/jpeg,image/webp,image/gif';
-  trainerInput.closest('.miniUpload')?.childNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)n.textContent='Choose trainer + buddy image or GIF';});
-  const empty=$('trainerCropEmpty');if(empty)empty.textContent='Upload one image containing trainer + buddy';
-  const hint=trainerCard?.querySelector('.cropHint');if(hint)hint.textContent='One crop only. The finished border sits directly around this crop and scales with the image.';
+  trainerInput.closest('.miniUpload')?.style.setProperty('display','none','important');
+  $('trainerSourceCard')?.style.setProperty('display','none','important');
+  const empty=$('trainerCropEmpty');if(empty)empty.textContent='Upload the Profile/OCR screenshot above';
+  const hint=trainerCard?.querySelectorAll('.cropHint');if(hint?.length)hint[hint.length-1].textContent='One crop only. The finished border sits directly around this crop and scales with the image.';
   $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
   $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');
   $('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');
   $('trainerUseFull')?.closest('label')?.style.setProperty('display','none','important');
   const zl=$('trainerZoom')?.closest('label');if(zl&&zl.firstChild)zl.firstChild.textContent='Combined image size ';
+  if(profileInput){
+    profileInput.accept='image/png,image/jpeg,image/webp,image/gif';
+    profileInput.addEventListener('change',e=>{
+      const f=e.target.files?.[0];if(!f)return;
+      copyProfileToTrainer(f,trainerInput);
+    });
+  }
   trainerInput.addEventListener('change',e=>{
     const f=e.target.files?.[0];stopGif();if(!f)return;
     const gif=f.type==='image/gif'||/\.gif$/i.test(f.name);
