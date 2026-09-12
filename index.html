@@ -4,23 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#090c13">
-  <title>Trainer Card Studio v32</title>
+  <title>Trainer Card Studio v33</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="studio-v27.css?v=32">
-  <link rel="stylesheet" href="studio-v29.css?v=32">
+  <link rel="stylesheet" href="studio-v27.css?v=33">
+  <link rel="stylesheet" href="studio-v29.css?v=33">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v32 · manual card builder + local OCR · no AI</small></span></div>
+    <div class="brand"><span class="brandmark">TC</span><span><b>Trainer Card Studio</b><small>v33 · manual card builder + local OCR · no AI</small></span></div>
     <button id="resetBtn" class="ghost" type="button">Start over</button>
   </header>
 
   <main class="app">
     <section class="hero">
       <div>
-        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 32</div>
+        <div class="eyebrow">CUSTOM TRAINER CARD MAKER · VERSION 33</div>
         <h1>Build the card yourself from your screenshots.</h1>
-        <p>OCR only tries to copy text from the profile screenshot. Every image on the card comes directly from screenshots you choose and crop yourself.</p>
+        <p>The profile screenshot or animated GIF is used for OCR and also becomes the source for the combined Trainer + Buddy crop.</p>
       </div>
       <div class="promise"><b>No AI is used to create or identify anything.</b>No image generation, no character recognition, no Pokémon guessing, and no AI text correction. The page uses local OCR, local QR detection, manual cropping, and deterministic canvas rendering.</div>
     </section>
@@ -28,11 +28,11 @@
     <div class="layout">
       <div class="leftcol">
         <section class="panel">
-          <div class="panelhead"><div><span class="num">01</span><h2>Profile information screenshot</h2><p>This screenshot is used only for OCR. OCR attempts to copy visible text into editable fields.</p></div><span class="chip">OCR only</span></div>
+          <div class="panelhead"><div><span class="num">01</span><h2>Profile information screenshot or GIF</h2><p>This one upload is used for OCR and for the Trainer + Buddy crop below.</p></div><span class="chip">OCR + image source</span></div>
           <label class="dropzone">
-            <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp">
+            <input id="profileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
             <span class="uploadIcon">OCR</span>
-            <span class="dropcopy"><b>Choose profile information screenshot</b><small>Local Tesseract OCR tries to read the trainer name, buddy name, level, stats, and start date.</small></span>
+            <span class="dropcopy"><b>Choose profile screenshot or animated GIF</b><small>Local Tesseract OCR reads the profile information, and the same file is reused automatically for the Trainer + Buddy image.</small></span>
           </label>
           <div id="infoSourceCard" class="sourceCard hidden"><img id="infoThumb" alt="information screenshot"><div><b id="infoName"></b><small id="infoMeta"></small></div></div>
           <div id="scanCard" class="scanCard hidden"><span class="spinner"></span><div><b id="scanTitle">Reading information screenshot</b><small id="scanDetail">Preparing…</small></div><b id="scanPct">0%</b></div>
@@ -73,35 +73,23 @@
         </section>
 
         <section class="panel">
-          <div class="panelhead"><div><span class="num">04</span><h2>Trainer and buddy images</h2><p>Upload separate screenshots and crop exactly what you want. Tap Adjust crop to open a focused mobile editor; normal mode stays scroll-friendly.</p></div><span class="chip">Manual crops</span></div>
+          <div class="panelhead"><div><span class="num">04</span><h2>Trainer + buddy crop</h2><p>This automatically uses the same Profile information screenshot or animated GIF uploaded in section 01. There is no second upload.</p></div><span class="chip">Uses OCR source</span></div>
           <div class="cropGrid">
             <div class="cropCard">
-              <h3>Trainer screenshot</h3>
-              <p>In crop mode, drag inside the rectangle to move it. Large phone-friendly handles resize width, height, or both.</p>
-              <label class="miniUpload">Choose trainer screenshot<input id="trainerShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
-              <div id="trainerSourceCard" class="sourceCard hidden"><img id="trainerSourceThumb" alt="trainer screenshot"><div><b id="trainerSourceName"></b><small id="trainerSourceMeta"></small></div></div>
-              <div class="cropCanvasWrap"><canvas id="trainerCropCanvas"></canvas><div id="trainerCropEmpty" class="cropEmpty">Upload a trainer screenshot</div></div>
-              <div class="cropHint">Outside crop mode you can swipe directly over this image to scroll the page.</div>
+              <h3>Trainer + buddy</h3>
+              <p>Keep both the trainer and buddy inside this one crop box. The card frame hugs the crop and grows or shrinks with it.</p>
+              <input id="trainerShotInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+              <div class="cropHint" style="margin:0 0 10px"><strong>Source:</strong> Profile information screenshot or animated GIF from section 01</div>
+              <div class="cropCanvasWrap"><canvas id="trainerCropCanvas"></canvas><div id="trainerCropEmpty" class="cropEmpty">Upload the Profile information screenshot or GIF above</div></div>
+              <div class="cropHint">One crop only. The finished border sits directly around this crop and scales with the image.</div>
               <div class="row"><button id="trainerApplyCrop" class="secondary" type="button">Apply trainer crop</button></div>
-              <div class="cropResult"><img id="trainerResult" class="rect hidden" alt="trainer crop"><div><b>Trainer image</b><span id="trainerResultText">No crop yet.</span></div></div>
+              <div class="cropResult"><img id="trainerResult" class="rect hidden" alt="trainer and buddy crop"><div><b>Trainer + Buddy image</b><span id="trainerResultText">No crop yet.</span></div></div>
               <div class="rangeGrid">
                 <label>Card trainer width <output id="trainerFrameWOut">520</output><input id="trainerFrameW" type="range" min="360" max="620" value="520" step="10"></label>
                 <label>Card trainer height <output id="trainerFrameHOut">560</output><input id="trainerFrameH" type="range" min="390" max="600" value="560" step="10"></label>
-                <label>Image zoom <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label>
+                <label>Combined image size <output id="trainerZoomOut">1.00×</output><input id="trainerZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label>
                 <label class="checkLabel"><input id="trainerUseFull" type="checkbox"> Use whole uploaded screenshot</label>
               </div>
-            </div>
-
-            <div class="cropCard">
-              <h3>Buddy screenshot</h3>
-              <p>Move and resize the circle around the buddy. The card uses exactly the screenshot crop you choose.</p>
-              <label class="miniUpload">Choose buddy screenshot<input id="buddyShotInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
-              <div id="buddySourceCard" class="sourceCard hidden"><img id="buddySourceThumb" alt="buddy screenshot"><div><b id="buddySourceName"></b><small id="buddySourceMeta"></small></div></div>
-              <div class="cropCanvasWrap"><canvas id="buddyCropCanvas"></canvas><div id="buddyCropEmpty" class="cropEmpty">Upload a buddy screenshot</div></div>
-              <div class="cropHint">Tap Adjust crop before moving or resizing the circle. Outside crop mode, swipe here to scroll.</div>
-              <div class="row"><button id="buddyApplyCrop" class="secondary" type="button">Apply buddy crop</button></div>
-              <div class="cropResult"><img id="buddyResult" class="circle hidden" alt="buddy crop"><div><b>Buddy image</b><span id="buddyResultText">No crop yet.</span></div></div>
-              <div class="rangeGrid"><label>Image zoom <output id="buddyZoomOut">1.00×</output><input id="buddyZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="buddyUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
             </div>
           </div>
         </section>
@@ -131,7 +119,7 @@
               <div class="cropCanvasWrap"><canvas id="favoriteCropCanvas"></canvas><div id="favoriteCropEmpty" class="cropEmpty">Optional screenshot</div></div>
               <div class="cropHint">Tap Adjust crop to edit the circle; normal mode remains scrollable.</div>
               <div class="row"><button id="favoriteApplyCrop" class="secondary" type="button">Apply Favorite crop</button></div>
-              <div class="cropResult"><img id="favoriteResult" class="circle hidden" alt="favorite Pokémon crop"><div><b>Favorite image</b><span id="favoriteResultText">No crop yet.</span></div></div>
+              <div class="cropResult"><img id="favoriteResult" class="circle hidden" alt="favorite crop"><div><b>Favorite image</b><span id="favoriteResultText">No crop yet.</span></div></div>
               <div class="rangeGrid"><label>Image zoom <output id="favoriteZoomOut">1.00×</output><input id="favoriteZoom" type="range" min="0.25" max="2" value="1" step="0.05"></label><label class="checkLabel"><input id="favoriteUseFull" type="checkbox"> Use whole uploaded screenshot</label></div>
             </div>
           </div>
@@ -160,7 +148,7 @@
               <div class="cardFace cardBack"><canvas id="backCanvas" width="900" height="1400"></canvas></div>
             </div>
           </div>
-          <div id="cardEmpty" class="cardEmpty"><b>Upload the profile screenshot</b><small>OCR fills the text; image slots remain fully manual.</small></div>
+          <div id="cardEmpty" class="cardEmpty"><b>Upload the profile screenshot or GIF</b><small>OCR fills the text and the same source feeds the Trainer + Buddy crop.</small></div>
         </div>
         <div class="previewActions">
           <p>Large readable labels separate trainer identity, current buddy, activity stats, Looking For, Favorite Pokémon, dates, and Trainer Code. Nothing on the card is AI-generated.</p>
@@ -175,7 +163,7 @@
   <div id="toast" class="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script src="studio-v27.js?v=32"></script>
-  <script src="studio-v29.js?v=32"></script>
+  <script src="studio-v27.js?v=33"></script>
+  <script src="studio-v29.js?v=33"></script>
 </body>
 </html>
