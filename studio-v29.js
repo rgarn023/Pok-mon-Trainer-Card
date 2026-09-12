@@ -1,239 +1,188 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id);
-const kinds=['trainer','looking','favorite'];
-const fresh=()=>({trainer:{cx:.5,cy:.44,w:.62,h:.72},looking:{cx:.5,cy:.5,r:.30},favorite:{cx:.5,cy:.5,r:.30}});
-const state=fresh();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-let gifTimer=null,combinedPanel=null;
+const freshTrainer=()=>({cx:.50,cy:.27,w:.82,h:.42});
+let trainerCrop=freshTrainer();
+let trainerOutput=null;
+let trainerGif=false;
+let gifTimer=null;
+let combinedPanel=null;
 
-function send(c,t,id,x,y){
-  const ev=new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:y,button:0,buttons:t==='pointerup'?0:1,pressure:t==='pointerup'?0:.5});
-  if(t==='pointerdown'&&c.setPointerCapture){
-    const old=c.setPointerCapture;
-    try{c.setPointerCapture=()=>{};c.dispatchEvent(ev)}finally{c.setPointerCapture=old}
-  }else c.dispatchEvent(ev);
+function rounded(g,x,y,w,h,r){g.beginPath();g.roundRect(x,y,w,h,r);}
+function imgReady(img){return !!(img&&img.src&&img.complete&&img.naturalWidth>0);}
+function trainerSource(){return $('infoThumb');}
+
+function ensureTrainerCanvas(){
+  const src=trainerSource(),c=$('trainerCropCanvas');
+  if(!imgReady(src)||!c)return false;
+  const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
+  const cw=Math.min(900,sw),ch=Math.max(1,Math.round(cw*sh/sw));
+  if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch;}
+  $('trainerCropEmpty')?.classList.add('hidden');
+  return true;
 }
-function pt(c,x,y){const r=c.getBoundingClientRect();return{x:r.left+x*r.width,y:r.top+y*r.height};}
-function geom(k){
-  const c=$(k+'CropCanvas'),s=state[k];if(!c||!s)return null;
-  if(k==='trainer')return{cx:s.cx,cy:s.cy,w:s.w,h:s.h};
-  const m=Math.min(c.width||1,c.height||1);
-  return{cx:s.cx,cy:s.cy,rx:s.r*m/(c.width||1),ry:s.r*m/(c.height||1)};
+
+function trainerRect(c){
+  const s=trainerCrop;
+  return {x:(s.cx-s.w/2)*c.width,y:(s.cy-s.h/2)*c.height,w:s.w*c.width,h:s.h*c.height};
 }
-function paint(k){
-  const g=geom(k),m=$(k+'Move');if(!g||!m)return;
-  if(k==='trainer'){
-    m.style.left=`${g.cx*100}%`;m.style.top=`${g.cy*100}%`;
-    const w=$(k+'W'),h=$(k+'H'),b=$(k+'B');
-    w.style.left=`${(g.cx+g.w/2)*100}%`;w.style.top=`${g.cy*100}%`;
-    h.style.left=`${g.cx*100}%`;h.style.top=`${(g.cy+g.h/2)*100}%`;
-    b.style.left=`${(g.cx+g.w/2)*100}%`;b.style.top=`${(g.cy+g.h/2)*100}%`;
+
+function drawTrainerEditor(){
+  const src=trainerSource(),c=$('trainerCropCanvas');
+  if(!ensureTrainerCanvas()||!imgReady(src)||!c)return;
+  const g=c.getContext('2d'),r=trainerRect(c);
+  g.clearRect(0,0,c.width,c.height);
+  g.drawImage(src,0,0,c.width,c.height);
+  g.fillStyle='rgba(0,0,0,.52)';g.fillRect(0,0,c.width,c.height);
+  g.save();g.beginPath();g.rect(r.x,r.y,r.w,r.h);g.clip();g.drawImage(src,0,0,c.width,c.height);g.restore();
+  g.strokeStyle='#fff';g.lineWidth=Math.max(3,c.width/250);g.strokeRect(r.x,r.y,r.w,r.h);
+  const d=Math.max(5,c.width/170);g.fillStyle='#fff';
+  for(const [x,y] of [[r.x+r.w,r.y+r.h/2],[r.x+r.w/2,r.y+r.h],[r.x+r.w,r.y+r.h]]){g.beginPath();g.arc(x,y,d,0,Math.PI*2);g.fill();}
+  g.font=`900 ${Math.max(15,c.width/52)}px system-ui`;g.fillText('TRAINER + BUDDY CROP',r.x+10,r.y+Math.max(24,c.width/34));
+  positionTrainerHandles();
+}
+
+function applyTrainerCrop(updateImg=true){
+  const src=trainerSource();if(!imgReady(src))return;
+  const iw=src.naturalWidth||src.width,ih=src.naturalHeight||src.height,s=trainerCrop;
+  const pw=s.w*iw,ph=s.h*ih,px=clamp(s.cx*iw-pw/2,0,iw-pw),py=clamp(s.cy*ih-ph/2,0,ih-ph);
+  const outW=900,outH=Math.max(1,Math.round(outW*ph/pw));
+  if(!trainerOutput)trainerOutput=document.createElement('canvas');
+  if(trainerOutput.width!==outW||trainerOutput.height!==outH){trainerOutput.width=outW;trainerOutput.height=outH;}
+  const g=trainerOutput.getContext('2d');g.clearRect(0,0,outW,outH);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(src,px,py,pw,ph,0,0,outW,outH);
+  if(updateImg&&!trainerGif){
+    const img=$('trainerResult');if(img){img.src=trainerOutput.toDataURL('image/png');img.classList.remove('hidden');}
+    const txt=$('trainerResultText');if(txt)txt.textContent='Trainer + Buddy crop ready.';
+  }
+}
+
+function handlePoint(mode){
+  const s=trainerCrop;
+  if(mode==='move')return{x:s.cx,y:s.cy};
+  if(mode==='w')return{x:s.cx+s.w/2,y:s.cy};
+  if(mode==='h')return{x:s.cx,y:s.cy+s.h/2};
+  return{x:s.cx+s.w/2,y:s.cy+s.h/2};
+}
+
+function positionTrainerHandles(){
+  for(const [id,mode] of [['trainerMove','move'],['trainerW','w'],['trainerH','h'],['trainerB','both']]){
+    const el=$(id);if(!el)continue;const p=handlePoint(mode);el.style.left=`${p.x*100}%`;el.style.top=`${p.y*100}%`;
+  }
+}
+
+function changeTrainer(start,mode,dx,dy,rect){
+  const s=trainerCrop;
+  if(mode==='move'){
+    s.cx=clamp(start.cx+dx/rect.width,start.w/2,1-start.w/2);
+    s.cy=clamp(start.cy+dy/rect.height,start.h/2,1-start.h/2);
   }else{
-    m.style.left=`${g.cx*100}%`;m.style.top=`${g.cy*100}%`;
-    const r=$(k+'R');r.style.left=`${(g.cx+g.rx)*100}%`;r.style.top=`${g.cy*100}%`;
+    if(mode==='w'||mode==='both')s.w=clamp(start.w+2*dx/rect.width,.16,.96);
+    if(mode==='h'||mode==='both')s.h=clamp(start.h+2*dy/rect.height,.12,.94);
+    s.cx=clamp(start.cx,s.w/2,1-s.w/2);
+    s.cy=clamp(start.cy,s.h/2,1-s.h/2);
   }
 }
-function anchor(k,mode){
-  const c=$(k+'CropCanvas'),s=state[k];
-  if(k==='trainer'){
-    if(mode==='move')return pt(c,s.cx,s.cy);
-    if(mode==='w')return pt(c,s.cx+s.w/2,s.cy);
-    if(mode==='h')return pt(c,s.cx,s.cy+s.h/2);
-    return pt(c,s.cx+s.w/2,s.cy+s.h/2);
-  }
-  const m=Math.min(c.width||1,c.height||1),rx=s.r*m/(c.width||1);
-  return mode==='move'?pt(c,s.cx,s.cy):pt(c,s.cx+rx,s.cy);
-}
-function local(k,mode,start,dx,dy,rect,c){
-  const s=state[k];
-  if(k==='trainer'){
-    if(mode==='move'){
-      s.cx=clamp(start.cx+dx/rect.width,start.w/2,1-start.w/2);
-      s.cy=clamp(start.cy+dy/rect.height,start.h/2,1-start.h/2);
-    }else{
-      if(mode==='w'||mode==='both')s.w=clamp(start.w+2*dx/rect.width,.18,.96);
-      if(mode==='h'||mode==='both')s.h=clamp(start.h+2*dy/rect.height,.20,.96);
-      s.cx=clamp(start.cx,s.w/2,1-s.w/2);s.cy=clamp(start.cy,s.h/2,1-s.h/2);
-    }
-  }else{
-    const m=Math.min(c.width||1,c.height||1);
-    if(mode==='move'){
-      s.cx=start.cx+dx/rect.width;s.cy=start.cy+dy/rect.height;
-      const rx=s.r*m/(c.width||1),ry=s.r*m/(c.height||1);
-      s.cx=clamp(s.cx,rx,1-rx);s.cy=clamp(s.cy,ry,1-ry);
-    }else{
-      const ix=dx*(c.width||1)/rect.width;s.r=clamp(start.r+ix/m,.08,.48);
-      const rx=s.r*m/(c.width||1),ry=s.r*m/(c.height||1);
-      s.cx=clamp(start.cx,rx,1-rx);s.cy=clamp(start.cy,ry,1-ry);
-    }
-  }
-}
-const applyTimers={};
-function scheduleApply(k,now=false){
-  clearTimeout(applyTimers[k]);
-  applyTimers[k]=setTimeout(()=>{$(k+'ApplyCrop')?.click();},now?0:80);
-}
-function drag(el,k,modeName){
-  if(!el)return;
+
+function bindTrainerHandle(id,mode){
+  const el=$(id);if(!el)return;
   el.addEventListener('pointerdown',e=>{
-    const c=$(k+'CropCanvas'),wrap=c?.closest('.cropCanvasWrap');
+    const c=$('trainerCropCanvas'),wrap=c?.closest('.cropCanvasWrap');
     if(!c||!wrap?.classList.contains('cropEditing')||c.width<=1)return;
-    e.preventDefault();e.stopPropagation();
-    const id=e.pointerId||77,rect=c.getBoundingClientRect(),start={...state[k]},a=anchor(k,modeName),sx=e.clientX,sy=e.clientY;
-    el.setPointerCapture?.(e.pointerId);send(c,'pointerdown',id,a.x,a.y);
-    const mv=q=>{
-      const dx=q.clientX-sx,dy=q.clientY-sy;local(k,modeName,start,dx,dy,rect,c);paint(k);send(c,'pointermove',id,a.x+dx,a.y+dy);scheduleApply(k);q.preventDefault();
-    };
-    const up=q=>{
-      el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);
-      const dx=(q.clientX??sx)-sx,dy=(q.clientY??sy)-sy;send(c,'pointerup',id,a.x+dx,a.y+dy);scheduleApply(k,true);q.preventDefault();
-    };
-    el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+    e.preventDefault();e.stopPropagation();el.setPointerCapture?.(e.pointerId);
+    const start={...trainerCrop},rect=c.getBoundingClientRect(),sx=e.clientX,sy=e.clientY;
+    const move=q=>{q.preventDefault();q.stopPropagation();changeTrainer(start,mode,q.clientX-sx,q.clientY-sy,rect);drawTrainerEditor();applyTrainerCrop(false);};
+    const up=q=>{q.preventDefault();q.stopPropagation();el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);drawTrainerEditor();applyTrainerCrop(true);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   });
 }
-function mode(k,on){
-  const c=$(k+'CropCanvas'),w=c?.closest('.cropCanvasWrap'),b=$(k+'Mode'),h=$(k+'Help');
-  if(!c||!w||!b)return;
-  if(on&&c.width<=1){if(h)h.innerHTML='<strong>Upload the profile/OCR screenshot first.</strong>';return;}
-  kinds.forEach(x=>{if(x!==k&&$(x+'CropCanvas')?.closest('.cropCanvasWrap')?.classList.contains('cropEditing'))mode(x,false)});
-  w.classList.toggle('cropEditing',on);b.classList.toggle('active',on);b.textContent=on?'Done adjusting':'Adjust crop';
-  if(h)h.innerHTML=on?'<strong>Adjust crop:</strong> drag MOVE or a resize handle. Swipe anywhere else on the image to scroll.':'<strong>Ready:</strong> tap Adjust crop to move or resize the crop box.';
-  paint(k);document.body.classList.toggle('combinedEditing',k==='trainer'&&on);
+
+function installTrainerLayer(){
+  const c=$('trainerCropCanvas'),wrap=c?.closest('.cropCanvasWrap');if(!c||!wrap)return;
+  wrap.querySelector('.tcLayer')?.remove();
+  const layer=document.createElement('div');layer.className='tcLayer trainerSyncLayer';
+  layer.innerHTML='<button id="trainerMove" class="tcMove" type="button">MOVE</button><button id="trainerW" class="tcH" type="button">↔</button><button id="trainerH" class="tcH" type="button">↕</button><button id="trainerB" class="tcH big" type="button">↘</button>';
+  wrap.appendChild(layer);
+  bindTrainerHandle('trainerMove','move');bindTrainerHandle('trainerW','w');bindTrainerHandle('trainerH','h');bindTrainerHandle('trainerB','both');
+  positionTrainerHandles();
 }
-function layer(k){
-  const c=$(k+'CropCanvas'),w=c?.closest('.cropCanvasWrap');if(!c||!w)return;
-  const l=document.createElement('div');l.className='tcLayer';l.id=k+'Layer';
-  if(k==='trainer')l.innerHTML=`<button id="${k}Move" class="tcMove" type="button">MOVE</button><button id="${k}W" class="tcH" type="button">↔</button><button id="${k}H" class="tcH" type="button">↕</button><button id="${k}B" class="tcH big" type="button">↘</button>`;
-  else l.innerHTML=`<button id="${k}Move" class="tcMove" type="button">MOVE</button><button id="${k}R" class="tcH big" type="button">↔</button>`;
-  w.appendChild(l);drag($(k+'Move'),k,'move');
-  if(k==='trainer'){drag($(k+'W'),k,'w');drag($(k+'H'),k,'h');drag($(k+'B'),k,'both');}else drag($(k+'R'),k,'r');
-  paint(k);
-}
-function controls(k){
-  const c=$(k+'CropCanvas'),w=c?.closest('.cropCanvasWrap');if(!c||!w)return;
+
+function installMode(kind){
+  const c=$(kind+'CropCanvas'),wrap=c?.closest('.cropCanvasWrap');if(!c||!wrap)return;
+  wrap.nextElementSibling?.classList.contains('cropModeBar')&&wrap.nextElementSibling.remove();
   const bar=document.createElement('div');bar.className='cropModeBar';
-  bar.innerHTML=`<button id="${k}Mode" class="cropModeBtn" type="button">Adjust crop</button><div id="${k}Help" class="cropModeHelp"><strong>Ready:</strong> tap Adjust crop to move or resize the crop.</div>`;
-  w.insertAdjacentElement('afterend',bar);$(k+'Mode').onclick=()=>mode(k,!w.classList.contains('cropEditing'));
-  $(k+'ShotInput')?.addEventListener('change',()=>{
-    Object.assign(state[k],fresh()[k]);mode(k,false);
-    setTimeout(()=>{paint(k);scheduleApply(k,true);},220);
-  });
+  bar.innerHTML=`<button id="${kind}Mode" class="cropModeBtn" type="button">Adjust crop</button><div id="${kind}Help" class="cropModeHelp"><strong>Ready:</strong> tap Adjust crop.</div>`;
+  wrap.insertAdjacentElement('afterend',bar);
+  const btn=$(kind+'Mode'),help=$(kind+'Help');
+  btn.onclick=()=>{
+    const on=!wrap.classList.contains('cropEditing');
+    document.querySelectorAll('.cropCanvasWrap.cropEditing').forEach(x=>x.classList.remove('cropEditing','nativeCrop'));
+    document.querySelectorAll('.cropModeBtn.active').forEach(x=>{x.classList.remove('active');x.textContent='Adjust crop';});
+    if(on){wrap.classList.add('cropEditing');if(kind!=='trainer')wrap.classList.add('nativeCrop');btn.classList.add('active');btn.textContent='Done adjusting';}
+    if(help)help.innerHTML=on?(kind==='trainer'?'<strong>Adjust crop:</strong> drag MOVE or a resize handle. Swipe anywhere else on the screenshot to scroll.':'<strong>Adjust crop:</strong> drag the crop on the image. Tap Done adjusting when finished.'):'<strong>Ready:</strong> tap Adjust crop.';
+    document.body.classList.toggle('combinedEditing',kind==='trainer'&&on);
+    if(kind==='trainer'){drawTrainerEditor();positionTrainerHandles();}
+  };
 }
+
 function stopGif(){if(gifTimer){clearInterval(gifTimer);gifTimer=null;}}
 function startGif(){
-  stopGif();
-  gifTimer=setInterval(()=>{if(!document.hidden)$('trainerApplyCrop')?.click();},110);
+  stopGif();gifTimer=setInterval(()=>{if(document.hidden)return;drawTrainerEditor();applyTrainerCrop(false);},100);
 }
-function rounded(g,x,y,w,h,r){g.beginPath();g.roundRect(x,y,w,h,r);}
-function ready(img){return !!(img&&img.src&&img.complete&&img.naturalWidth>0);}
-function drawCover(g,img,x,y,w,h){
-  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(!iw||!ih)return;
-  const sc=Math.max(w/iw,h/ih),sw=w/sc,sh=h/sc,sx=(iw-sw)/2,sy=(ih-sh)/2;
-  g.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+
+function waitForTrainerSource(){
+  const src=trainerSource();if(!src)return;
+  const start=()=>{trainerCrop=freshTrainer();ensureTrainerCanvas();drawTrainerEditor();applyTrainerCrop(true);if(trainerGif)startGif();};
+  if(imgReady(src))start();else src.addEventListener('load',start,{once:true});
 }
+
+function drawCover(g,img,x,y,w,h){const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(!iw||!ih)return;const sc=Math.max(w/iw,h/ih),sw=w/sc,sh=h/sc,sx=(iw-sw)/2,sy=(ih-sh)/2;g.drawImage(img,sx,sy,sw,sh,x,y,w,h);}
 function restoreCardBackground(g,x,y,w,h){
   const bg=document.createElement('canvas');bg.width=900;bg.height=1400;const b=bg.getContext('2d');
-  const front=$('frontBgThumb'),shared=$('sharedBgThumb'),custom=ready(front)?front:ready(shared)?shared:null;
-  if(custom){
-    drawCover(b,custom,0,0,900,1400);
-    b.fillStyle='rgba(3,6,11,.22)';b.fillRect(0,0,900,1400);
-  }else{
-    const team=document.querySelector('.team.active')?.dataset.team||'valor';
-    const dark=team==='mystic'?'#061c31':team==='instinct'?'#2b2400':'#250b14';
-    const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
+  const front=$('frontBgThumb'),shared=$('sharedBgThumb'),custom=imgReady(front)?front:imgReady(shared)?shared:null;
+  if(custom){drawCover(b,custom,0,0,900,1400);b.fillStyle='rgba(3,6,11,.22)';b.fillRect(0,0,900,1400);}else{
+    const team=document.querySelector('.team.active')?.dataset.team||'valor';const dark=team==='mystic'?'#061c31':team==='instinct'?'#2b2400':'#250b14';const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
     const gr=b.createLinearGradient(0,0,900,1400);gr.addColorStop(0,dark);gr.addColorStop(.42,'#101725');gr.addColorStop(1,'#070a10');b.fillStyle=gr;b.fillRect(0,0,900,1400);
     b.save();b.globalAlpha=.16;b.strokeStyle=accent;b.lineWidth=2;for(let i=-300;i<1300;i+=90){b.beginPath();b.moveTo(i,0);b.lineTo(i+700,1400);b.stroke();}b.restore();
   }
   g.drawImage(bg,x,y,w,h,x,y,w,h);
 }
+
 function renderCombinedCard(){
-  const c=$('cardCanvas'),img=$('trainerResult');if(!c||!ready(img))return;
+  const c=$('cardCanvas'),img=trainerOutput;if(!c||!img||!img.width||!img.height)return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-  /* Use nearly all of the upper card while stopping just above the activity stats. */
-  const cleanX=35,cleanY=175,cleanW=830,cleanH=695;
-  restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
-  const iw=img.naturalWidth,ih=img.naturalHeight;if(!iw||!ih)return;
-  const size=Math.max(.25,Math.min(2,Number($('trainerZoom')?.value||1)));
-  const maxW=810,maxH=675,fit=Math.min(maxW/iw,maxH/ih);
-  /* 1.00x is larger than before; the upper end fills the available card area. */
-  const sizeFactor=Math.min(1,.52+.32*size),scale=fit*sizeFactor;
-  const sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale);
-  const pad=6,frameW=sw+pad*2,frameH=sh+pad*2;
-  const fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
-  g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();
-  g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
-  const ix=fx+pad,iy=fy+pad;
-  g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
+  const cleanX=35,cleanY=175,cleanW=830,cleanH=695;restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
+  const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,2),maxW=810,maxH=675,fit=Math.min(maxW/iw,maxH/ih);
+  const sizeFactor=Math.min(1,.52+.32*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=6,frameW=sw+12,frameH=sh+12,fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
+  g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,18);g.fill();g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,18);g.stroke();
+  const ix=fx+pad,iy=fy+pad;g.save();rounded(g,ix,iy,sw,sh,13);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
+
 function saveCombined(e){
-  const btn=$('saveBtn');if(!btn)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  const flipped=$('cardFlipper')?.classList.contains('flipped');
-  const c=flipped?$('backCanvas'):$('cardCanvas');if(!c)return;
-  if(!flipped)renderCombinedCard();
-  const a=document.createElement('a'),name=($('trainerName')?.value||'trainer').replace(/\W+/g,'_'),team=document.querySelector('.team.active')?.dataset.team||'team';
-  a.href=c.toDataURL('image/png');a.download=`${name}_${team}_trainer_card_${flipped?'back':'front'}_combined.png`;a.click();
+  e.preventDefault();e.stopImmediatePropagation();const flipped=$('cardFlipper')?.classList.contains('flipped'),c=flipped?$('backCanvas'):$('cardCanvas');if(!c)return;if(!flipped)renderCombinedCard();
+  const a=document.createElement('a'),name=($('trainerName')?.value||'trainer').replace(/\W+/g,'_'),team=document.querySelector('.team.active')?.dataset.team||'team';a.href=c.toDataURL('image/png');a.download=`${name}_${team}_trainer_card_${flipped?'back':'front'}_combined.png`;a.click();
 }
-function copyProfileToTrainer(file,trainerInput){
-  if(!file||!trainerInput)return;
-  try{
-    const dt=new DataTransfer();dt.items.add(file);trainerInput.files=dt.files;
-    trainerInput.dispatchEvent(new Event('change',{bubbles:true}));
-  }catch(err){console.error('Could not reuse profile screenshot for crop editor',err);}
-}
-function installCombined(){
-  const trainerInput=$('trainerShotInput'),buddyInput=$('buddyShotInput'),profileInput=$('profileInput');if(!trainerInput)return;
-  combinedPanel=trainerInput.closest('section.panel');if(!combinedPanel)return;
-  combinedPanel.classList.add('combinedPanel');
-  const head=combinedPanel.querySelector('.panelhead'),h2=head?.querySelector('h2'),p=head?.querySelector('p'),chip=head?.querySelector('.chip');
-  if(h2)h2.textContent='Trainer + buddy image';
-  if(p)p.textContent='This automatically uses the same screenshot you selected for Profile information/OCR. Adjust one crop box around the trainer and buddy; there is no second upload.';
-  if(chip)chip.textContent='Uses OCR screenshot';
-  const trainerCard=trainerInput.closest('.cropCard'),buddyCard=buddyInput?.closest('.cropCard');
-  buddyCard?.classList.add('removedBuddyCrop');
-  if(trainerCard){
-    const h=trainerCard.querySelector('h3'),desc=trainerCard.querySelector('p');
-    if(h)h.textContent='Trainer + buddy';
-    if(desc)desc.textContent='The Profile/OCR screenshot above is reused here automatically. Keep both the trainer and buddy inside this one crop box.';
-    const note=document.createElement('div');note.className='cropHint';note.style.margin='0 0 10px';note.innerHTML='<strong>Source:</strong> Profile information / OCR screenshot';
-    trainerCard.querySelector('.miniUpload')?.insertAdjacentElement('beforebegin',note);
+
+function install(){
+  const trainerInput=$('trainerShotInput'),profile=$('profileInput');combinedPanel=trainerInput?.closest('section.panel');
+  if(combinedPanel){
+    const head=combinedPanel.querySelector('.panelhead'),h2=head?.querySelector('h2'),p=head?.querySelector('p'),chip=head?.querySelector('.chip');
+    if(h2)h2.textContent='Trainer + buddy crop';if(p)p.textContent='Uses the same Profile information screenshot or animated GIF from section 01. There is no second upload.';if(chip)chip.textContent='Uses OCR source';
+    combinedPanel.querySelector('.cropCard')?.querySelector('.miniUpload')?.remove();
+    $('trainerSourceCard')?.remove();
+    $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
+    $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');$('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');$('trainerUseFull')?.closest('label')?.style.setProperty('display','none','important');
   }
-  trainerInput.closest('.miniUpload')?.style.setProperty('display','none','important');
-  $('trainerSourceCard')?.style.setProperty('display','none','important');
-  const empty=$('trainerCropEmpty');if(empty)empty.textContent='Upload the Profile/OCR screenshot above';
-  const hint=trainerCard?.querySelectorAll('.cropHint');if(hint?.length)hint[hint.length-1].textContent='One crop only. The finished border sits directly around this crop and scales with the image.';
-  $('trainerApplyCrop')?.closest('.row')?.style.setProperty('display','none','important');
-  $('trainerFrameW')?.closest('label')?.style.setProperty('display','none','important');
-  $('trainerFrameH')?.closest('label')?.style.setProperty('display','none','important');
-  $('trainerUseFull')?.closest('label')?.style.setProperty('display','none','important');
-  const zl=$('trainerZoom')?.closest('label');if(zl&&zl.firstChild)zl.firstChild.textContent='Combined image size ';
-  if(profileInput){
-    profileInput.accept='image/png,image/jpeg,image/webp,image/gif';
-    profileInput.addEventListener('change',e=>{
-      const f=e.target.files?.[0];if(!f)return;
-      copyProfileToTrainer(f,trainerInput);
-    });
-  }
-  trainerInput.addEventListener('change',e=>{
-    const f=e.target.files?.[0];stopGif();if(!f)return;
-    const gif=f.type==='image/gif'||/\.gif$/i.test(f.name);
-    combinedPanel.dataset.mediaType=gif?'gif':'still';
-    setTimeout(()=>{$('trainerApplyCrop')?.click();if(gif)startGif();},350);
-  });
-  if('IntersectionObserver' in window){
-    const obs=new IntersectionObserver(entries=>document.body.classList.toggle('combinedWatch',entries.some(x=>x.isIntersecting)),{threshold:.04});
-    obs.observe(combinedPanel);
-  }else document.body.classList.add('combinedWatch');
+  if(profile){profile.accept='image/png,image/jpeg,image/webp,image/gif';profile.addEventListener('change',e=>{stopGif();const f=e.target.files?.[0];trainerGif=!!(f&&(f.type==='image/gif'||/\.gif$/i.test(f.name)));setTimeout(waitForTrainerSource,0);});}
+  installTrainerLayer();installMode('trainer');installMode('looking');installMode('favorite');
+  $('trainerApplyCrop')?.addEventListener('click',()=>applyTrainerCrop(true),true);
+  $('trainerZoom')?.addEventListener('input',renderCombinedCard);
+  if(combinedPanel&&'IntersectionObserver'in window){new IntersectionObserver(es=>document.body.classList.toggle('combinedWatch',es.some(x=>x.isIntersecting)),{threshold:.04}).observe(combinedPanel);}
   $('saveBtn')?.addEventListener('click',saveCombined,true);
+  $('resetBtn')?.addEventListener('click',()=>{stopGif();trainerGif=false;trainerCrop=freshTrainer();trainerOutput=null;const c=$('trainerCropCanvas');if(c){c.width=1;c.height=1;}$('trainerCropEmpty')?.classList.remove('hidden');positionTrainerHandles();});
+  animationLoop();
 }
-function init(){
-  kinds.forEach(k=>{controls(k);layer(k);});installCombined();animationLoop();
-  $('resetBtn')?.addEventListener('click',()=>{
-    stopGif();const d=fresh();kinds.forEach(k=>{Object.assign(state[k],d[k]);mode(k,false);paint(k);});
-    document.body.classList.remove('combinedEditing');if(combinedPanel)delete combinedPanel.dataset.mediaType;
-  });
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
