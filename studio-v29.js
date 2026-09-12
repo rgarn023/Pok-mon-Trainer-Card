@@ -149,15 +149,66 @@ function restoreCardBackground(g,x,y,w,h){
   g.drawImage(bg,x,y,w,h,x,y,w,h);
 }
 
+function fitLabel(g,text,x,y,maxW,size,weight=900,align='center'){
+  let s=size;g.textAlign=align;g.textBaseline='middle';
+  while(s>11){g.font=`${weight} ${s}px system-ui`;if(g.measureText(text||'—').width<=maxW)break;s--;}
+  g.fillText(text||'—',x,y,maxW);
+}
+
+function drawCompactLower(g){
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
+  const statsY=1095,statsH=102;
+  g.fillStyle='rgba(5,8,13,.80)';rounded(g,45,statsY,810,statsH,20);g.fill();
+  g.strokeStyle='rgba(255,255,255,.13)';g.lineWidth=2;rounded(g,45,statsY,810,statsH,20);g.stroke();
+  const stats=[['POKÉMON CAUGHT',$('caught')?.value||'—',180],['POKÉSTOPS VISITED',$('stops')?.value||'—',450],['TOTAL XP',$('xp')?.value||'—',720]];
+  for(const [lab,val,x] of stats){
+    g.fillStyle='rgba(255,255,255,.62)';g.font='800 13px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(lab,x,1120);
+    g.fillStyle='#fff';fitLabel(g,String(val).trim()||'—',x,1162,225,30,950,'center');
+  }
+
+  const showY=1208,showH=120;
+  g.fillStyle='rgba(5,8,13,.72)';rounded(g,45,showY,810,showH,20);g.fill();
+  g.strokeStyle='rgba(255,255,255,.10)';g.lineWidth=2;rounded(g,45,showY,810,showH,20);g.stroke();
+  const slots=[{x:250,label:'LOOKING FOR',img:$('lookingResult'),name:$('lookingName')?.value||'—'},{x:650,label:'FAVORITE POKÉMON',img:$('favoriteResult'),name:$('favoriteName')?.value||'—'}];
+  for(const it of slots){
+    g.fillStyle=accent;g.font='900 13px system-ui';g.textAlign='center';g.fillText(it.label,it.x,1228);
+    const r=37,cx=it.x,cy=1270;
+    g.save();g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.clip();g.fillStyle='rgba(3,6,10,.82)';g.fillRect(cx-r,cy-r,r*2,r*2);
+    if(imgReady(it.img)){
+      const iw=it.img.naturalWidth,ih=it.img.naturalHeight,sc=Math.max((r*2)/iw,(r*2)/ih),dw=iw*sc,dh=ih*sc;
+      g.drawImage(it.img,cx-dw/2,cy-dh/2,dw,dh);
+    }
+    g.restore();g.strokeStyle='rgba(255,255,255,.78)';g.lineWidth=2.5;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
+    g.fillStyle='#fff';fitLabel(g,String(it.name).trim()||'—',cx,1316,250,17,850,'center');
+  }
+
+  g.fillStyle='rgba(255,255,255,.68)';g.font='700 13px system-ui';g.textBaseline='middle';g.textAlign='left';g.fillText(`STARTED  ${($('startDate')?.value||'—').trim()}`,48,1352);
+  g.textAlign='right';g.fillText(`CARD DATE  ${($('printDate')?.value||'—').trim()}`,852,1352);
+}
+
+function redrawCardBorder(g){
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ff4052';
+  g.strokeStyle=accent;g.lineWidth=8;rounded(g,18,18,864,1364,34);g.stroke();
+  g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=2;rounded(g,31,31,838,1338,27);g.stroke();
+}
+
 function renderCombinedCard(){
   const c=$('cardCanvas'),img=trainerOutput;if(!c||!img||!img.width||!img.height)return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
-  /* Let the combined crop grow almost to the card's inner border while still staying above the stats. */
-  const cleanX=18,cleanY=150,cleanW=864,cleanH=720;restoreCardBackground(g,cleanX,cleanY,cleanW,cleanH);
-  const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,3),maxW=842,maxH=704,fit=Math.min(maxW/iw,maxH/ih);
-  const sizeFactor=Math.min(1.12,.58+.18*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=5,frameW=sw+10,frameH=sh+10,fx=450-frameW/2,fy=cleanY+(cleanH-frameH)/2;
+
+  /* Clear the old large trainer/stat/showcase layout and rebuild it compactly. */
+  restoreCardBackground(g,18,185,864,1180);
+
+  /* Tall crops now have almost 900px of vertical room, allowing them to grow much wider. */
+  const areaX=24,areaY=190,areaW=852,areaH=892;
+  const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,3),maxW=836,maxH=876,fit=Math.min(maxW/iw,maxH/ih);
+  const sizeFactor=Math.min(1,.50+.17*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=5,frameW=sw+10,frameH=sh+10;
+  const fx=450-frameW/2,fy=areaY+(areaH-frameH)/2;
   g.save();g.fillStyle='rgba(0,0,0,.36)';rounded(g,fx,fy,frameW,frameH,16);g.fill();g.strokeStyle=accent;g.lineWidth=3;rounded(g,fx,fy,frameW,frameH,16);g.stroke();
   const ix=fx+pad,iy=fy+pad;g.save();rounded(g,ix,iy,sw,sh,12);g.clip();g.drawImage(img,ix,iy,sw,sh);g.restore();g.restore();
+
+  drawCompactLower(g);
+  redrawCardBorder(g);
 }
 function animationLoop(){renderCombinedCard();requestAnimationFrame(animationLoop);}
 
