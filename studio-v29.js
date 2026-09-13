@@ -149,41 +149,53 @@ function restoreCardBackground(g,x,y,w,h){
   g.drawImage(bg,x,y,w,h,x,y,w,h);
 }
 
+function strongText(g,text,x,y,fill='#fff',strokeWidth=4,maxW){
+  g.save();g.lineJoin='round';g.strokeStyle='rgba(0,0,0,.88)';g.lineWidth=strokeWidth;
+  if(maxW)g.strokeText(text,x,y,maxW);else g.strokeText(text,x,y);
+  g.fillStyle=fill;if(maxW)g.fillText(text,x,y,maxW);else g.fillText(text,x,y);g.restore();
+}
+
 function fitLabel(g,text,x,y,maxW,size,weight=900,align='center'){
   let s=size;g.textAlign=align;g.textBaseline='middle';
   while(s>11){g.font=`${weight} ${s}px system-ui`;if(g.measureText(text||'—').width<=maxW)break;s--;}
-  g.fillText(text||'—',x,y,maxW);
+  strongText(g,text||'—',x,y,g.fillStyle,Math.max(2.5,s*.13),maxW);
 }
 
 function drawCompactLower(g){
   const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
   const statsY=1095,statsH=102;
-  g.fillStyle='rgba(5,8,13,.80)';rounded(g,45,statsY,810,statsH,20);g.fill();
-  g.strokeStyle='rgba(255,255,255,.13)';g.lineWidth=2;rounded(g,45,statsY,810,statsH,20);g.stroke();
+  g.fillStyle='rgba(3,6,11,.91)';rounded(g,45,statsY,810,statsH,20);g.fill();
+  g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=2;rounded(g,45,statsY,810,statsH,20);g.stroke();
   const stats=[['POKÉMON CAUGHT',$('caught')?.value||'—',180],['POKÉSTOPS VISITED',$('stops')?.value||'—',450],['TOTAL XP',$('xp')?.value||'—',720]];
   for(const [lab,val,x] of stats){
-    g.fillStyle='rgba(255,255,255,.62)';g.font='800 13px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(lab,x,1120);
-    g.fillStyle='#fff';fitLabel(g,String(val).trim()||'—',x,1162,225,30,950,'center');
+    g.font='900 14px system-ui';g.textAlign='center';g.textBaseline='middle';strongText(g,lab,x,1119,accent,3.5);
+    g.fillStyle='#fff';fitLabel(g,String(val).trim()||'—',x,1162,225,31,950,'center');
   }
 
-  const showY=1208,showH=120;
-  g.fillStyle='rgba(5,8,13,.72)';rounded(g,45,showY,810,showH,20);g.fill();
-  g.strokeStyle='rgba(255,255,255,.10)';g.lineWidth=2;rounded(g,45,showY,810,showH,20);g.stroke();
+  const showY=1207,showH=121;
+  g.fillStyle='rgba(3,6,11,.88)';rounded(g,45,showY,810,showH,20);g.fill();
+  g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=2;rounded(g,45,showY,810,showH,20);g.stroke();
   const slots=[{x:250,label:'LOOKING FOR',img:$('lookingResult'),name:$('lookingName')?.value||'—'},{x:650,label:'FAVORITE POKÉMON',img:$('favoriteResult'),name:$('favoriteName')?.value||'—'}];
   for(const it of slots){
-    g.fillStyle=accent;g.font='900 13px system-ui';g.textAlign='center';g.fillText(it.label,it.x,1228);
-    const r=37,cx=it.x,cy=1270;
-    g.save();g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.clip();g.fillStyle='rgba(3,6,10,.82)';g.fillRect(cx-r,cy-r,r*2,r*2);
+    g.font='900 14px system-ui';g.textAlign='center';g.textBaseline='middle';
+    const tw=Math.min(235,g.measureText(it.label).width+22),pillY=1215,pillH=25;
+    g.fillStyle='rgba(0,0,0,.82)';rounded(g,it.x-tw/2,pillY,tw,pillH,12);g.fill();
+    g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=1.5;rounded(g,it.x-tw/2,pillY,tw,pillH,12);g.stroke();
+    strongText(g,it.label,it.x,pillY+pillH/2,accent,3);
+
+    const r=31,cx=it.x,cy=1276;
+    g.save();g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.clip();g.fillStyle='rgba(3,6,10,.92)';g.fillRect(cx-r,cy-r,r*2,r*2);
     if(imgReady(it.img)){
       const iw=it.img.naturalWidth,ih=it.img.naturalHeight,sc=Math.max((r*2)/iw,(r*2)/ih),dw=iw*sc,dh=ih*sc;
       g.drawImage(it.img,cx-dw/2,cy-dh/2,dw,dh);
     }
-    g.restore();g.strokeStyle='rgba(255,255,255,.78)';g.lineWidth=2.5;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
-    g.fillStyle='#fff';fitLabel(g,String(it.name).trim()||'—',cx,1316,250,17,850,'center');
+    g.restore();g.strokeStyle='rgba(255,255,255,.92)';g.lineWidth=2.7;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
+    g.fillStyle='#fff';fitLabel(g,String(it.name).trim()||'—',cx,1315,250,16,900,'center');
   }
 
-  g.fillStyle='rgba(255,255,255,.68)';g.font='700 13px system-ui';g.textBaseline='middle';g.textAlign='left';g.fillText(`STARTED  ${($('startDate')?.value||'—').trim()}`,48,1352);
-  g.textAlign='right';g.fillText(`CARD DATE  ${($('printDate')?.value||'—').trim()}`,852,1352);
+  g.fillStyle='rgba(0,0,0,.70)';rounded(g,38,1335,250,27,12);g.fill();rounded(g,612,1335,250,27,12);g.fill();
+  g.font='850 14px system-ui';g.textBaseline='middle';g.textAlign='left';strongText(g,`STARTED  ${($('startDate')?.value||'—').trim()}`,49,1349,'#fff',3.5);
+  g.textAlign='right';strongText(g,`CARD DATE  ${($('printDate')?.value||'—').trim()}`,851,1349,'#fff',3.5);
 }
 
 function redrawCardBorder(g){
