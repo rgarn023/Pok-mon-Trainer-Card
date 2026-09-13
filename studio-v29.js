@@ -77,12 +77,16 @@ function changeTrainer(start,mode,dx,dy,rect){
   if(mode==='move'){
     s.cx=clamp(start.cx+dx/rect.width,start.w/2,1-start.w/2);
     s.cy=clamp(start.cy+dy/rect.height,start.h/2,1-start.h/2);
-  }else{
-    if(mode==='w'||mode==='both')s.w=clamp(start.w+2*dx/rect.width,.16,.96);
-    if(mode==='h'||mode==='both')s.h=clamp(start.h+2*dy/rect.height,.12,.94);
-    s.cx=clamp(start.cx,s.w/2,1-s.w/2);
-    s.cy=clamp(start.cy,s.h/2,1-s.h/2);
+    return;
   }
+
+  /* Resize from the right/bottom only. The crop's top-left corner stays anchored. */
+  const left=start.cx-start.w/2,top=start.cy-start.h/2;
+  let w=start.w,h=start.h;
+  if(mode==='w'||mode==='both')w=clamp(start.w+dx/rect.width,.16,1-left);
+  if(mode==='h'||mode==='both')h=clamp(start.h+dy/rect.height,.12,1-top);
+  s.w=w;s.h=h;
+  s.cx=left+w/2;s.cy=top+h/2;
 }
 
 function bindTrainerHandle(id,mode){
@@ -120,7 +124,7 @@ function installMode(kind){
     document.querySelectorAll('.cropCanvasWrap.cropEditing').forEach(x=>x.classList.remove('cropEditing','nativeCrop'));
     document.querySelectorAll('.cropModeBtn.active').forEach(x=>{x.classList.remove('active');x.textContent='Adjust crop';});
     if(on){wrap.classList.add('cropEditing');if(kind!=='trainer')wrap.classList.add('nativeCrop');btn.classList.add('active');btn.textContent='Done adjusting';}
-    if(help)help.innerHTML=on?(kind==='trainer'?'<strong>Adjust crop:</strong> drag MOVE or a resize handle. Swipe anywhere else on the screenshot to scroll.':'<strong>Adjust crop:</strong> drag the crop on the image. Tap Done adjusting when finished.'):'<strong>Ready:</strong> tap Adjust crop.';
+    if(help)help.innerHTML=on?(kind==='trainer'?'<strong>Adjust crop:</strong> MOVE repositions it. ↔, ↕ and ↘ resize only the right/bottom edges, keeping the top-left fixed. Swipe elsewhere to scroll.':'<strong>Adjust crop:</strong> drag the crop on the image. Tap Done adjusting when finished.'):'<strong>Ready:</strong> tap Adjust crop.';
     document.body.classList.toggle('combinedEditing',kind==='trainer'&&on);
     if(kind==='trainer'){drawTrainerEditor();positionTrainerHandles();}
   };
@@ -177,20 +181,21 @@ function drawCompactLower(g){
   g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=2;rounded(g,45,showY,810,showH,20);g.stroke();
   const slots=[{x:250,label:'LOOKING FOR',img:$('lookingResult'),name:$('lookingName')?.value||'—'},{x:650,label:'FAVORITE POKÉMON',img:$('favoriteResult'),name:$('favoriteName')?.value||'—'}];
   for(const it of slots){
-    g.font='900 14px system-ui';g.textAlign='center';g.textBaseline='middle';
-    const tw=Math.min(235,g.measureText(it.label).width+22),pillY=1215,pillH=25;
-    g.fillStyle='rgba(0,0,0,.82)';rounded(g,it.x-tw/2,pillY,tw,pillH,12);g.fill();
-    g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=1.5;rounded(g,it.x-tw/2,pillY,tw,pillH,12);g.stroke();
-    strongText(g,it.label,it.x,pillY+pillH/2,accent,3);
+    g.font='900 13px system-ui';g.textAlign='center';g.textBaseline='middle';
+    const tw=Math.min(230,g.measureText(it.label).width+24),pillY=1213,pillH=22;
+    g.fillStyle='rgba(0,0,0,.86)';rounded(g,it.x-tw/2,pillY,tw,pillH,11);g.fill();
+    g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=1.5;rounded(g,it.x-tw/2,pillY,tw,pillH,11);g.stroke();
+    strongText(g,it.label,it.x,pillY+pillH/2,accent,2.8);
 
-    const r=31,cx=it.x,cy=1276;
+    /* Keep a clear visual gap between the heading and the circle. */
+    const r=27,cx=it.x,cy=1281;
     g.save();g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.clip();g.fillStyle='rgba(3,6,10,.92)';g.fillRect(cx-r,cy-r,r*2,r*2);
     if(imgReady(it.img)){
       const iw=it.img.naturalWidth,ih=it.img.naturalHeight,sc=Math.max((r*2)/iw,(r*2)/ih),dw=iw*sc,dh=ih*sc;
       g.drawImage(it.img,cx-dw/2,cy-dh/2,dw,dh);
     }
     g.restore();g.strokeStyle='rgba(255,255,255,.92)';g.lineWidth=2.7;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();
-    g.fillStyle='#fff';fitLabel(g,String(it.name).trim()||'—',cx,1315,250,16,900,'center');
+    g.fillStyle='#fff';fitLabel(g,String(it.name).trim()||'—',cx,1320,250,15,900,'center');
   }
 
   g.fillStyle='rgba(0,0,0,.70)';rounded(g,38,1335,250,27,12);g.fill();rounded(g,612,1335,250,27,12);g.fill();
@@ -208,10 +213,8 @@ function renderCombinedCard(){
   const c=$('cardCanvas'),img=trainerOutput;if(!c||!img||!img.width||!img.height)return;
   const g=c.getContext('2d'),accent=getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()||'#fff';
 
-  /* Clear the old large trainer/stat/showcase layout and rebuild it compactly. */
   restoreCardBackground(g,18,185,864,1180);
 
-  /* Tall crops now have almost 900px of vertical room, allowing them to grow much wider. */
   const areaX=24,areaY=190,areaW=852,areaH=892;
   const iw=img.width,ih=img.height,size=clamp(Number($('trainerZoom')?.value||1),.25,3),maxW=836,maxH=876,fit=Math.min(maxW/iw,maxH/ih);
   const sizeFactor=Math.min(1,.50+.17*size),scale=fit*sizeFactor,sw=Math.max(80,iw*scale),sh=Math.max(80,ih*scale),pad=5,frameW=sw+10,frameH=sh+10;
